@@ -1,0 +1,102 @@
+{
+  "name": "agentic-control",
+  "version": "1.0.0",
+  "description": "Unified AI agent fleet management, triage, and orchestration toolkit for control centers",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "agentic": "./dist/cli.js",
+    "agentic-control": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./fleet": {
+      "types": "./dist/fleet/index.d.ts",
+      "import": "./dist/fleet/index.js"
+    },
+    "./triage": {
+      "types": "./dist/triage/index.d.ts",
+      "import": "./dist/triage/index.js"
+    },
+    "./github": {
+      "types": "./dist/github/index.d.ts",
+      "import": "./dist/github/index.js"
+    },
+    "./handoff": {
+      "types": "./dist/handoff/index.d.ts",
+      "import": "./dist/handoff/index.js"
+    },
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src/",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "prepublishOnly": "npm run build && npm run test"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^2.0.50",
+    "@modelcontextprotocol/sdk": "^1.23.0",
+    "@octokit/rest": "^21.1.1",
+    "ai": "^5.0.104",
+    "commander": "^13.1.0",
+    "env-var": "^7.5.0",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.1",
+    "@vitest/coverage-v8": "^3.1.4",
+    "typescript": "^5.7.0",
+    "vitest": "^3.1.4"
+  },
+  "peerDependencies": {
+    "cursor-background-agent-mcp-server": "^1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "cursor-background-agent-mcp-server": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "fleet",
+    "triage",
+    "mcp",
+    "orchestration",
+    "cursor",
+    "anthropic",
+    "claude",
+    "github",
+    "automation",
+    "control-center",
+    "devops"
+  ],
+  "author": "Jon Bogaty <jon@flipsidecrypto.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jbcom/agentic-control.git"
+  },
+  "homepage": "https://github.com/jbcom/agentic-control#readme",
+  "bugs": {
+    "url": "https://github.com/jbcom/agentic-control/issues"
+  }
+}
