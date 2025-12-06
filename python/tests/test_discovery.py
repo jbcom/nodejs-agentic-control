@@ -18,9 +18,7 @@ class TestDiscovery:
         assert "otterfall" in packages
         assert packages["otterfall"].exists()
 
-    def test_discover_packages_returns_empty_when_no_packages(
-        self, tmp_path: Path
-    ) -> None:
+    def test_discover_packages_returns_empty_when_no_packages(self, tmp_path: Path) -> None:
         """Test that discover_packages returns empty dict when no .crewai dirs exist."""
         from crew_agents.core.discovery import discover_packages
 
@@ -33,9 +31,7 @@ class TestDiscovery:
 
         assert packages == {}
 
-    def test_list_crews_returns_crews_from_manifest(
-        self, temp_workspace: Path
-    ) -> None:
+    def test_list_crews_returns_crews_from_manifest(self, temp_workspace: Path) -> None:
         """Test that list_crews returns crew definitions from manifest."""
         from crew_agents.core.discovery import list_crews
 
@@ -50,9 +46,7 @@ class TestDiscovery:
         assert len(crews) == 1
         assert crews[0]["name"] == "test_crew"
 
-    def test_list_crews_filters_by_package_name(
-        self, temp_workspace: Path
-    ) -> None:
+    def test_list_crews_filters_by_package_name(self, temp_workspace: Path) -> None:
         """Test that list_crews can filter to a specific package."""
         from crew_agents.core.discovery import list_crews
 
@@ -65,9 +59,7 @@ class TestDiscovery:
         assert "otterfall" in crews_by_package
         assert len(crews_by_package) == 1
 
-    def test_list_crews_returns_empty_for_nonexistent_package(
-        self, temp_workspace: Path
-    ) -> None:
+    def test_list_crews_returns_empty_for_nonexistent_package(self, temp_workspace: Path) -> None:
         """Test that list_crews returns empty for non-existent package."""
         from crew_agents.core.discovery import list_crews
 

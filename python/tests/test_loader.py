@@ -81,9 +81,7 @@ class TestLoadKnowledgeSources:
         knowledge_dir.mkdir()
         (knowledge_dir / "test.md").write_text("# Test Knowledge\nSome content")
 
-        with patch(
-            "crew_agents.core.loader.TextFileKnowledgeSource"
-        ) as MockKnowledgeSource:
+        with patch("crew_agents.core.loader.TextFileKnowledgeSource") as MockKnowledgeSource:
             load_knowledge_sources([knowledge_dir])
 
             # Verify TextFileKnowledgeSource was called

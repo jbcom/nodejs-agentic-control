@@ -124,8 +124,7 @@ class TestGameCodeWriterTool:
             return_value=temp_workspace / "packages" / "otterfall",
         ):
             result = tool._run(
-                file_path="src/ecs/TestComponent.ts",
-                content="export const TestComponent = {};"
+                file_path="src/ecs/TestComponent.ts", content="export const TestComponent = {};"
             )
 
         assert "Successfully wrote" in result
