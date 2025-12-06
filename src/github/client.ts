@@ -15,13 +15,7 @@ import { spawnSync } from 'node:child_process';
 import { getTokenForRepo, getPRReviewToken, extractOrg } from '../core/tokens.js';
 import { log } from '../core/config.js';
 import type { Result, Repository, PullRequest, PRComment } from '../core/types.js';
-import type {
-    CICheck,
-    CIStatus,
-    FeedbackItem,
-    FeedbackSeverity,
-    FeedbackStatus,
-} from '../triage/types.js';
+import type { CICheck, CIStatus, FeedbackItem, FeedbackSeverity, FeedbackStatus } from '../triage/types.js';
 
 // ============================================
 // Octokit Cache (one per token)

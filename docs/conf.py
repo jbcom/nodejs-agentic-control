@@ -96,12 +96,10 @@ napoleon_attr_annotations = True
 
 # -- sphinx-js settings (TypeScript documentation) --
 # Note: sphinx-js requires TypeDoc to be installed (npm install typedoc@0.28)
-# Currently disabled due to Zod schema type inference conflicts
-# To enable TypeScript documentation, uncomment the lines below
-# js_language = "typescript"
-# js_source_path = ["../src"]
-# jsdoc_tsconfig_path = "../tsconfig.json"
-# root_for_relative_js_paths = "../src"
+js_language = "typescript"
+js_source_path = ["../src"]
+jsdoc_config_path = "../typedoc.json"
+root_for_relative_js_paths = "../src"
 
 # -- intersphinx settings --
 intersphinx_mapping = {
