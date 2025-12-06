@@ -35,6 +35,9 @@ class AssetSpec(BaseModel):
 class AssetState(BaseModel):
     """State maintained throughout asset generation."""
 
+    # Required by CrewAI Flow
+    id: str = ""
+
     # Input designs
     creature_design: str = ""
     world_design: str = ""

@@ -36,7 +36,7 @@ class TestGetWorkspaceRoot:
 
         # Create otterfall package
         otterfall = temp_workspace / "packages" / "otterfall"
-        otterfall.mkdir(parents=True)
+        otterfall.mkdir(parents=True, exist_ok=True)
 
         with patch(
             "crew_agents.tools.file_tools._find_workspace_root",
@@ -124,8 +124,7 @@ class TestGameCodeWriterTool:
             return_value=temp_workspace / "packages" / "otterfall",
         ):
             result = tool._run(
-                file_path="src/ecs/TestComponent.ts",
-                content="export const TestComponent = {};"
+                file_path="src/ecs/TestComponent.ts", content="export const TestComponent = {};"
             )
 
         assert "Successfully wrote" in result

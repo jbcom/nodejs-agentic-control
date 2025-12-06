@@ -22,6 +22,9 @@ from crew_agents.crews.rendering.rendering_crew import RenderingCrew
 class ImplementationState(BaseModel):
     """State maintained throughout implementation."""
 
+    # Required by CrewAI Flow
+    id: str = ""
+
     # Design inputs
     world_design: str = ""
     creature_design: str = ""

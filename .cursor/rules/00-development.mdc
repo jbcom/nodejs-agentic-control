@@ -1,0 +1,31 @@
+# agentic-control Development
+
+## Package Overview
+
+Dual TypeScript/Python package for AI agent management.
+
+## TypeScript Commands
+
+```bash
+pnpm install         # Install deps
+pnpm run build       # Build with tsc
+pnpm run test        # Run vitest tests
+pnpm run format      # Format with Prettier
+```
+
+## Python Commands
+
+```bash
+cd python
+uv sync --extra tests
+uv run pytest tests/ -v
+uvx ruff check --fix src/
+uvx ruff format src/
+```
+
+## Key Patterns
+
+- TypeScript uses Prettier for formatting
+- Python uses Ruff for linting/formatting
+- Both support MCP server protocols
+- Python requires 3.10+ (crewai)

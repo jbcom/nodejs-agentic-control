@@ -1,457 +1,442 @@
-import { generateText } from "ai";
-import { anthropic } from "@ai-sdk/anthropic";
-import { simpleGit, type SimpleGit } from "simple-git";
-import { writeFile } from "fs/promises";
-import { existsSync } from "fs";
-import type { FeedbackItem, Blocker, ActionResult, TriageResult } from "./types.js";
-import type { GitHubClient } from "../github/client.js";
+import { generateText } from 'ai';
+import { anthropic } from '@ai-sdk/anthropic';
+import { simpleGit, type SimpleGit } from 'simple-git';
+import { writeFile } from 'fs/promises';
+import { existsSync } from 'fs';
+import type { FeedbackItem, Blocker, ActionResult, TriageResult } from './types.js';
+import type { GitHubClient } from '../github/client.js';
 
 export interface ResolverConfig {
-  workingDirectory: string;
-  dryRun?: boolean;
+    workingDirectory: string;
+    dryRun?: boolean;
 }
 
 export class Resolver {
-  private model = anthropic("claude-sonnet-4-20250514");
-  private config: ResolverConfig;
-  private git: SimpleGit;
+    private model = anthropic('claude-sonnet-4-20250514');
+    private config: ResolverConfig;
+    private git: SimpleGit;
 
-  constructor(config: ResolverConfig) {
-    this.config = config;
-    this.git = simpleGit(config.workingDirectory);
-  }
-
-  // ==========================================================================
-  // Main Resolution Methods
-  // ==========================================================================
-
-  async resolveBlockers(
-    github: GitHubClient,
-    triage: TriageResult
-  ): Promise<ActionResult[]> {
-    const results: ActionResult[] = [];
-
-    for (const blocker of triage.blockers) {
-      if (!blocker.isAutoResolvable) {
-        results.push({
-          success: false,
-          action: `Resolve ${blocker.type}`,
-          description: blocker.description,
-          error: "Blocker requires human intervention",
-          changes: null,
-          commitSha: null,
-        });
-        continue;
-      }
-
-      const result = await this.resolveBlocker(github, triage.prNumber, blocker);
-      results.push(result);
+    constructor(config: ResolverConfig) {
+        this.config = config;
+        this.git = simpleGit(config.workingDirectory);
     }
 
-    return results;
-  }
+    // ==========================================================================
+    // Main Resolution Methods
+    // ==========================================================================
 
-  async resolveFeedback(
-    github: GitHubClient,
-    triage: TriageResult
-  ): Promise<ActionResult[]> {
-    const results: ActionResult[] = [];
-    const unaddressed = triage.feedback.items.filter(
-      (f) => f.status === "unaddressed"
-    );
+    async resolveBlockers(github: GitHubClient, triage: TriageResult): Promise<ActionResult[]> {
+        const results: ActionResult[] = [];
 
-    for (const feedback of unaddressed) {
-      const result = await this.resolveFeedbackItem(
-        github,
-        triage.prNumber,
-        feedback,
-        { prTitle: triage.prTitle }
-      );
-      results.push(result);
+        for (const blocker of triage.blockers) {
+            if (!blocker.isAutoResolvable) {
+                results.push({
+                    success: false,
+                    action: `Resolve ${blocker.type}`,
+                    description: blocker.description,
+                    error: 'Blocker requires human intervention',
+                    changes: null,
+                    commitSha: null,
+                });
+                continue;
+            }
+
+            const result = await this.resolveBlocker(github, triage.prNumber, blocker);
+            results.push(result);
+        }
+
+        return results;
     }
 
-    return results;
-  }
+    async resolveFeedback(github: GitHubClient, triage: TriageResult): Promise<ActionResult[]> {
+        const results: ActionResult[] = [];
+        const unaddressed = triage.feedback.items.filter((f) => f.status === 'unaddressed');
 
-  // ==========================================================================
-  // Blocker Resolution
-  // ==========================================================================
+        for (const feedback of unaddressed) {
+            const result = await this.resolveFeedbackItem(github, triage.prNumber, feedback, {
+                prTitle: triage.prTitle,
+            });
+            results.push(result);
+        }
 
-  private async resolveBlocker(
-    github: GitHubClient,
-    prNumber: number,
-    blocker: Blocker
-  ): Promise<ActionResult> {
-    switch (blocker.type) {
-      case "ci_failure":
-        return this.fixCIFailure(github, prNumber, blocker);
-      case "review_feedback":
-        // This is handled by resolveFeedback
-        return {
-          success: true,
-          action: "Resolve review feedback",
-          description: "Handled by feedback resolver",
-          error: null,
-          changes: null,
-          commitSha: null,
-        };
-      default:
-        return {
-          success: false,
-          action: `Resolve ${blocker.type}`,
-          description: blocker.description,
-          error: `Cannot auto-resolve blocker type: ${blocker.type}`,
-          changes: null,
-          commitSha: null,
-        };
+        return results;
     }
-  }
 
-  private async fixCIFailure(
-    github: GitHubClient,
-    prNumber: number,
-    blocker: Blocker
-  ): Promise<ActionResult> {
-    try {
-      // Get failure details
-      const ciUrl = blocker.url;
-      if (!ciUrl) {
-        return {
-          success: false,
-          action: "Fix CI failure",
-          description: blocker.description,
-          error: "No CI URL available to analyze",
-          changes: null,
-          commitSha: null,
-        };
-      }
+    // ==========================================================================
+    // Blocker Resolution
+    // ==========================================================================
 
-      // Use AI to analyze the failure and generate a fix
-      const { text: analysis } = await generateText({
-        model: this.model,
-        prompt: `Analyze this CI failure and suggest a fix.
+    private async resolveBlocker(
+        github: GitHubClient,
+        prNumber: number,
+        blocker: Blocker
+    ): Promise<ActionResult> {
+        switch (blocker.type) {
+            case 'ci_failure':
+                return this.fixCIFailure(github, prNumber, blocker);
+            case 'review_feedback':
+                // This is handled by resolveFeedback
+                return {
+                    success: true,
+                    action: 'Resolve review feedback',
+                    description: 'Handled by feedback resolver',
+                    error: null,
+                    changes: null,
+                    commitSha: null,
+                };
+            default:
+                return {
+                    success: false,
+                    action: `Resolve ${blocker.type}`,
+                    description: blocker.description,
+                    error: `Cannot auto-resolve blocker type: ${blocker.type}`,
+                    changes: null,
+                    commitSha: null,
+                };
+        }
+    }
+
+    private async fixCIFailure(
+        github: GitHubClient,
+        prNumber: number,
+        blocker: Blocker
+    ): Promise<ActionResult> {
+        try {
+            // Get failure details
+            const ciUrl = blocker.url;
+            if (!ciUrl) {
+                return {
+                    success: false,
+                    action: 'Fix CI failure',
+                    description: blocker.description,
+                    error: 'No CI URL available to analyze',
+                    changes: null,
+                    commitSha: null,
+                };
+            }
+
+            // Use AI to analyze the failure and generate a fix
+            const { text: analysis } = await generateText({
+                model: this.model,
+                prompt: `Analyze this CI failure and suggest a fix.
 
 CI Failure: ${blocker.description}
 URL: ${ciUrl}
 
 Based on common CI failure patterns, what is likely wrong and how should it be fixed?
 Be specific about which files to change and what changes to make.`,
-      });
+            });
 
-      // For now, we'll report the analysis rather than auto-applying
-      // Full implementation would use bash/textEditor tools to apply fixes
-      await github.postComment(
-        prNumber,
-        `## CI Failure Analysis\n\n${analysis}\n\n_Auto-generated by ai-triage_`
-      );
+            // For now, we'll report the analysis rather than auto-applying
+            // Full implementation would use bash/textEditor tools to apply fixes
+            await github.postComment(
+                prNumber,
+                `## CI Failure Analysis\n\n${analysis}\n\n_Auto-generated by ai-triage_`
+            );
 
-      return {
-        success: true,
-        action: "Analyze CI failure",
-        description: `Posted analysis for: ${blocker.description}`,
-        error: null,
-        changes: null,
-        commitSha: null,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        action: "Fix CI failure",
-        description: blocker.description,
-        error: error instanceof Error ? error.message : String(error),
-        changes: null,
-        commitSha: null,
-      };
-    }
-  }
-
-  // ==========================================================================
-  // Feedback Resolution
-  // ==========================================================================
-
-  private async resolveFeedbackItem(
-    github: GitHubClient,
-    prNumber: number,
-    feedback: FeedbackItem,
-    context: { prTitle: string }
-  ): Promise<ActionResult> {
-    try {
-      // Check if there's a suggestion block we can apply directly
-      if (feedback.suggestedAction && feedback.path) {
-        return this.applySuggestion(github, prNumber, feedback);
-      }
-
-      // Generate a response (fix or justification)
-      const response = await this.generateResponse(feedback, context);
-
-      if (response.type === "fix" && feedback.path) {
-        // Apply the fix to the file
-        return this.applyFix(github, prNumber, feedback, response.content);
-      } else {
-        // Post a justification comment
-        return this.postJustification(github, prNumber, feedback, response.content);
-      }
-    } catch (error) {
-      return {
-        success: false,
-        action: `Address feedback ${feedback.id}`,
-        description: feedback.body.slice(0, 100),
-        error: error instanceof Error ? error.message : String(error),
-        changes: null,
-        commitSha: null,
-      };
-    }
-  }
-
-  private async applySuggestion(
-    _github: GitHubClient,
-    _prNumber: number,
-    feedback: FeedbackItem
-  ): Promise<ActionResult> {
-    if (!feedback.path || !feedback.suggestedAction) {
-      return {
-        success: false,
-        action: "Apply suggestion",
-        description: "Missing path or suggestion",
-        error: "Cannot apply suggestion without file path and content",
-        changes: null,
-        commitSha: null,
-      };
+            return {
+                success: true,
+                action: 'Analyze CI failure',
+                description: `Posted analysis for: ${blocker.description}`,
+                error: null,
+                changes: null,
+                commitSha: null,
+            };
+        } catch (error) {
+            return {
+                success: false,
+                action: 'Fix CI failure',
+                description: blocker.description,
+                error: error instanceof Error ? error.message : String(error),
+                changes: null,
+                commitSha: null,
+            };
+        }
     }
 
-    const filePath = `${this.config.workingDirectory}/${feedback.path}`;
-    
-    if (!existsSync(filePath)) {
-      return {
-        success: false,
-        action: "Apply suggestion",
-        description: `File not found: ${feedback.path}`,
-        error: "Target file does not exist",
-        changes: null,
-        commitSha: null,
-      };
+    // ==========================================================================
+    // Feedback Resolution
+    // ==========================================================================
+
+    private async resolveFeedbackItem(
+        github: GitHubClient,
+        prNumber: number,
+        feedback: FeedbackItem,
+        context: { prTitle: string }
+    ): Promise<ActionResult> {
+        try {
+            // Check if there's a suggestion block we can apply directly
+            if (feedback.suggestedAction && feedback.path) {
+                return this.applySuggestion(github, prNumber, feedback);
+            }
+
+            // Generate a response (fix or justification)
+            const response = await this.generateResponse(feedback, context);
+
+            if (response.type === 'fix' && feedback.path) {
+                // Apply the fix to the file
+                return this.applyFix(github, prNumber, feedback, response.content);
+            } else {
+                // Post a justification comment
+                return this.postJustification(github, prNumber, feedback, response.content);
+            }
+        } catch (error) {
+            return {
+                success: false,
+                action: `Address feedback ${feedback.id}`,
+                description: feedback.body.slice(0, 100),
+                error: error instanceof Error ? error.message : String(error),
+                changes: null,
+                commitSha: null,
+            };
+        }
     }
 
-    if (this.config.dryRun) {
-      return {
-        success: true,
-        action: "Apply suggestion (dry run)",
-        description: `Would apply suggestion to ${feedback.path}`,
-        error: null,
-        changes: [{ file: feedback.path, type: "modified" }],
-        commitSha: null,
-      };
+    private async applySuggestion(
+        _github: GitHubClient,
+        _prNumber: number,
+        feedback: FeedbackItem
+    ): Promise<ActionResult> {
+        if (!feedback.path || !feedback.suggestedAction) {
+            return {
+                success: false,
+                action: 'Apply suggestion',
+                description: 'Missing path or suggestion',
+                error: 'Cannot apply suggestion without file path and content',
+                changes: null,
+                commitSha: null,
+            };
+        }
+
+        const filePath = `${this.config.workingDirectory}/${feedback.path}`;
+
+        if (!existsSync(filePath)) {
+            return {
+                success: false,
+                action: 'Apply suggestion',
+                description: `File not found: ${feedback.path}`,
+                error: 'Target file does not exist',
+                changes: null,
+                commitSha: null,
+            };
+        }
+
+        if (this.config.dryRun) {
+            return {
+                success: true,
+                action: 'Apply suggestion (dry run)',
+                description: `Would apply suggestion to ${feedback.path}`,
+                error: null,
+                changes: [{ file: feedback.path, type: 'modified' }],
+                commitSha: null,
+            };
+        }
+
+        // Read file, apply suggestion, write back
+        // This is simplified - full implementation would handle line-specific changes
+        // Apply the suggestion by replacing the file content with the suggestedAction
+        const newContent = feedback.suggestedAction;
+
+        await writeFile(filePath, newContent, 'utf-8');
+
+        return {
+            success: true,
+            action: 'Apply suggestion',
+            description: `Applied suggestion to ${feedback.path}`,
+            error: null,
+            changes: [{ file: feedback.path, type: 'modified' }],
+            commitSha: null,
+        };
     }
 
-    // Read file, apply suggestion, write back
-    // This is simplified - full implementation would handle line-specific changes
-    // Apply the suggestion by replacing the file content with the suggestedAction
-    const newContent = feedback.suggestedAction;
-
-    await writeFile(filePath, newContent, "utf-8");
-
-    return {
-      success: true,
-      action: "Apply suggestion",
-      description: `Applied suggestion to ${feedback.path}`,
-      error: null,
-      changes: [{ file: feedback.path, type: "modified" }],
-      commitSha: null,
-    };
-  }
-
-  private async generateResponse(
-    feedback: FeedbackItem,
-    context: { prTitle: string }
-  ): Promise<{ type: "fix" | "justification"; content: string }> {
-    const { text } = await generateText({
-      model: this.model,
-      prompt: `Determine how to respond to this PR feedback.
+    private async generateResponse(
+        feedback: FeedbackItem,
+        context: { prTitle: string }
+    ): Promise<{ type: 'fix' | 'justification'; content: string }> {
+        const { text } = await generateText({
+            model: this.model,
+            prompt: `Determine how to respond to this PR feedback.
 
 PR: ${context.prTitle}
 
 Feedback from ${feedback.author} (${feedback.severity} severity):
 ${feedback.body}
 
-${feedback.path ? `File: ${feedback.path}` : ""}
+${feedback.path ? `File: ${feedback.path}` : ''}
 
 Should this be fixed or justified? If fixed, what's the fix? If justified, what's the reasoning?
 
 Respond in this format:
 TYPE: fix OR justification
 CONTENT: <the fix code or justification text>`,
-    });
+        });
 
-    const typeMatch = text.match(/TYPE:\s*(fix|justification)/i);
-    const contentMatch = text.match(/CONTENT:\s*([\s\S]+)/i);
+        const typeMatch = text.match(/TYPE:\s*(fix|justification)/i);
+        const contentMatch = text.match(/CONTENT:\s*([\s\S]+)/i);
 
-    return {
-      type: (typeMatch?.[1]?.toLowerCase() as "fix" | "justification") ?? "justification",
-      content: contentMatch?.[1]?.trim() ?? text,
-    };
-  }
-
-  private async applyFix(
-    github: GitHubClient,
-    prNumber: number,
-    feedback: FeedbackItem,
-    fix: string
-  ): Promise<ActionResult> {
-    if (!feedback.path) {
-      return {
-        success: false,
-        action: "Apply fix",
-        description: "No file path for fix",
-        error: "Cannot apply fix without target file",
-        changes: null,
-        commitSha: null,
-      };
+        return {
+            type: (typeMatch?.[1]?.toLowerCase() as 'fix' | 'justification') ?? 'justification',
+            content: contentMatch?.[1]?.trim() ?? text,
+        };
     }
 
-    if (this.config.dryRun) {
-      return {
-        success: true,
-        action: "Apply fix (dry run)",
-        description: `Would apply fix to ${feedback.path}`,
-        error: null,
-        changes: [{ file: feedback.path, type: "modified" }],
-        commitSha: null,
-      };
+    private async applyFix(
+        github: GitHubClient,
+        prNumber: number,
+        feedback: FeedbackItem,
+        fix: string
+    ): Promise<ActionResult> {
+        if (!feedback.path) {
+            return {
+                success: false,
+                action: 'Apply fix',
+                description: 'No file path for fix',
+                error: 'Cannot apply fix without target file',
+                changes: null,
+                commitSha: null,
+            };
+        }
+
+        if (this.config.dryRun) {
+            return {
+                success: true,
+                action: 'Apply fix (dry run)',
+                description: `Would apply fix to ${feedback.path}`,
+                error: null,
+                changes: [{ file: feedback.path, type: 'modified' }],
+                commitSha: null,
+            };
+        }
+
+        // Apply the fix - post as comment for human review
+        try {
+            // For now, post the fix as a comment for human review
+            await github.postComment(
+                prNumber,
+                `## Suggested Fix for ${feedback.path}\n\n\`\`\`\n${fix}\n\`\`\`\n\n_Responding to feedback from ${feedback.author}_`
+            );
+
+            return {
+                success: true,
+                action: 'Suggest fix',
+                description: `Posted fix suggestion for ${feedback.path}`,
+                error: null,
+                changes: null,
+                commitSha: null,
+            };
+        } catch (error) {
+            return {
+                success: false,
+                action: 'Apply fix',
+                description: `Failed to apply fix to ${feedback.path}`,
+                error: error instanceof Error ? error.message : String(error),
+                changes: null,
+                commitSha: null,
+            };
+        }
     }
 
-    // Apply the fix - post as comment for human review
-    try {
-      // For now, post the fix as a comment for human review
-      await github.postComment(
-        prNumber,
-        `## Suggested Fix for ${feedback.path}\n\n\`\`\`\n${fix}\n\`\`\`\n\n_Responding to feedback from ${feedback.author}_`
-      );
+    private async postJustification(
+        github: GitHubClient,
+        prNumber: number,
+        feedback: FeedbackItem,
+        justification: string
+    ): Promise<ActionResult> {
+        try {
+            // Extract comment ID if possible
+            const commentIdMatch = feedback.id.match(/comment-(\d+)/);
 
-      return {
-        success: true,
-        action: "Suggest fix",
-        description: `Posted fix suggestion for ${feedback.path}`,
-        error: null,
-        changes: null,
-        commitSha: null,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        action: "Apply fix",
-        description: `Failed to apply fix to ${feedback.path}`,
-        error: error instanceof Error ? error.message : String(error),
-        changes: null,
-        commitSha: null,
-      };
-    }
-  }
+            if (commentIdMatch) {
+                await github.replyToComment(prNumber, parseInt(commentIdMatch[1]), justification);
+            } else {
+                await github.postComment(
+                    prNumber,
+                    `Re: ${feedback.author}'s feedback\n\n${justification}`
+                );
+            }
 
-  private async postJustification(
-    github: GitHubClient,
-    prNumber: number,
-    feedback: FeedbackItem,
-    justification: string
-  ): Promise<ActionResult> {
-    try {
-      // Extract comment ID if possible
-      const commentIdMatch = feedback.id.match(/comment-(\d+)/);
-      
-      if (commentIdMatch) {
-        await github.replyToComment(
-          prNumber,
-          parseInt(commentIdMatch[1]),
-          justification
-        );
-      } else {
-        await github.postComment(
-          prNumber,
-          `Re: ${feedback.author}'s feedback\n\n${justification}`
-        );
-      }
-
-      return {
-        success: true,
-        action: "Post justification",
-        description: `Responded to ${feedback.author}'s feedback`,
-        error: null,
-        changes: null,
-        commitSha: null,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        action: "Post justification",
-        description: `Failed to respond to ${feedback.author}`,
-        error: error instanceof Error ? error.message : String(error),
-        changes: null,
-        commitSha: null,
-      };
-    }
-  }
-
-  // ==========================================================================
-  // Git Operations
-  // ==========================================================================
-
-  async commitAndPush(message: string): Promise<ActionResult> {
-    if (this.config.dryRun) {
-      return {
-        success: true,
-        action: "Commit and push (dry run)",
-        description: `Would commit: ${message}`,
-        error: null,
-        changes: null,
-        commitSha: null,
-      };
+            return {
+                success: true,
+                action: 'Post justification',
+                description: `Responded to ${feedback.author}'s feedback`,
+                error: null,
+                changes: null,
+                commitSha: null,
+            };
+        } catch (error) {
+            return {
+                success: false,
+                action: 'Post justification',
+                description: `Failed to respond to ${feedback.author}`,
+                error: error instanceof Error ? error.message : String(error),
+                changes: null,
+                commitSha: null,
+            };
+        }
     }
 
-    try {
-      // Use simple-git for safe git operations (no shell injection)
-      await this.git.add("-A");
-      await this.git.commit(message);
-      const commitSha = await this.git.revparse(["HEAD"]);
-      await this.git.push();
+    // ==========================================================================
+    // Git Operations
+    // ==========================================================================
 
-      return {
-        success: true,
-        action: "Commit and push",
-        description: message,
-        error: null,
-        changes: null,
-        commitSha: commitSha.trim(),
-      };
-    } catch (error) {
-      return {
-        success: false,
-        action: "Commit and push",
-        description: message,
-        error: error instanceof Error ? error.message : String(error),
-        changes: null,
-        commitSha: null,
-      };
+    async commitAndPush(message: string): Promise<ActionResult> {
+        if (this.config.dryRun) {
+            return {
+                success: true,
+                action: 'Commit and push (dry run)',
+                description: `Would commit: ${message}`,
+                error: null,
+                changes: null,
+                commitSha: null,
+            };
+        }
+
+        try {
+            // Use simple-git for safe git operations (no shell injection)
+            await this.git.add('-A');
+            await this.git.commit(message);
+            const commitSha = await this.git.revparse(['HEAD']);
+            await this.git.push();
+
+            return {
+                success: true,
+                action: 'Commit and push',
+                description: message,
+                error: null,
+                changes: null,
+                commitSha: commitSha.trim(),
+            };
+        } catch (error) {
+            return {
+                success: false,
+                action: 'Commit and push',
+                description: message,
+                error: error instanceof Error ? error.message : String(error),
+                changes: null,
+                commitSha: null,
+            };
+        }
     }
-  }
 
-  /**
-   * Get current git status
-   */
-  async getStatus(): Promise<{ modified: string[]; staged: string[]; untracked: string[] }> {
-    const status = await this.git.status();
-    return {
-      modified: status.modified,
-      staged: status.staged,
-      untracked: status.not_added,
-    };
-  }
-
-  /**
-   * Get diff for files
-   */
-  async getDiff(staged = false): Promise<string> {
-    if (staged) {
-      return this.git.diff(["--cached"]);
+    /**
+     * Get current git status
+     */
+    async getStatus(): Promise<{ modified: string[]; staged: string[]; untracked: string[] }> {
+        const status = await this.git.status();
+        return {
+            modified: status.modified,
+            staged: status.staged,
+            untracked: status.not_added,
+        };
     }
-    return this.git.diff();
-  }
+
+    /**
+     * Get diff for files
+     */
+    async getDiff(staged = false): Promise<string> {
+        if (staged) {
+            return this.git.diff(['--cached']);
+        }
+        return this.git.diff();
+    }
 }

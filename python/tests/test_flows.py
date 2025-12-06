@@ -22,13 +22,7 @@ class TestTDDPrototypeFlow:
 
     def test_design_phase_returns_mock_when_crew_unavailable(self) -> None:
         """Test that design_phase returns mock result when CrewAgents is not available."""
-        from crew_agents.flows.tdd_prototype_flow import TDDPrototypeFlow
-
-        flow = TDDPrototypeFlow()
-        flow.state = MagicMock()
-        flow.state.requirements = {"feature": "test"}
-
-        # Patch the import to raise ImportError
+        # Patch the import to raise ImportError before creating the flow
         with patch.dict("sys.modules", {"crew_agents.crew": None}):
             with patch(
                 "crew_agents.flows.tdd_prototype_flow.TDDPrototypeFlow.design_phase"

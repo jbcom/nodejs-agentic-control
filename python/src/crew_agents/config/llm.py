@@ -9,7 +9,6 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
 
 try:
     from crewai import LLM
@@ -77,7 +76,7 @@ LLM_CONFIGS = {
 
 def get_llm(
     model: str = DEFAULT_MODEL, temperature: float = 0.7, provider: LLMProvider | None = None
-) -> Optional["LLM"]:
+) -> LLM | None:
     """Get configured LLM instance for CrewAI agents.
 
     Args:
@@ -134,7 +133,7 @@ def get_llm(
     return None
 
 
-def _create_anthropic_llm(model: str, temperature: float, api_key: str) -> "LLM":
+def _create_anthropic_llm(model: str, temperature: float, api_key: str) -> LLM:
     """Create Anthropic LLM instance."""
     return LLM(
         model=model,
@@ -143,7 +142,7 @@ def _create_anthropic_llm(model: str, temperature: float, api_key: str) -> "LLM"
     )
 
 
-def _create_openrouter_llm(model: str, temperature: float, api_key: str) -> "LLM":
+def _create_openrouter_llm(model: str, temperature: float, api_key: str) -> LLM:
     """Create OpenRouter LLM instance."""
     # Convert model name to OpenRouter format if needed
     if not model.startswith("openrouter/"):
@@ -159,7 +158,7 @@ def _create_openrouter_llm(model: str, temperature: float, api_key: str) -> "LLM
 
 def get_llm_or_raise(
     model: str = DEFAULT_MODEL, temperature: float = 0.7, provider: LLMProvider | None = None
-) -> "LLM":
+) -> LLM:
     """Get configured LLM instance, raising if API key not set.
 
     Use this when you need to ensure an LLM is available.
@@ -185,7 +184,7 @@ def get_llm_or_raise(
     return llm
 
 
-def get_llm_for_task(task: str) -> Optional["LLM"]:
+def get_llm_for_task(task: str) -> LLM | None:
     """Get LLM configured for a specific task type.
 
     Args:
@@ -209,16 +208,16 @@ def get_llm_for_task(task: str) -> Optional["LLM"]:
 
 
 # Convenience functions for specific use cases (backward compatibility)
-def get_reasoning_llm() -> Optional["LLM"]:
+def get_reasoning_llm() -> LLM | None:
     """Get LLM optimized for complex reasoning tasks."""
     return get_llm_for_task("reasoning")
 
 
-def get_creative_llm() -> Optional["LLM"]:
+def get_creative_llm() -> LLM | None:
     """Get LLM optimized for creative tasks."""
     return get_llm_for_task("creative")
 
 
-def get_code_llm() -> Optional["LLM"]:
+def get_code_llm() -> LLM | None:
     """Get LLM optimized for code generation."""
     return get_llm_for_task("code")

@@ -49,6 +49,7 @@ def get_all_tools():
     # Try to load mesh-toolkit tools if available
     try:
         from mesh_toolkit.agent_tools.crewai import get_tools as get_meshy_tools
+
         tools.extend(get_meshy_tools())
     except ImportError:
         pass  # mesh-toolkit not installed with crewai extra

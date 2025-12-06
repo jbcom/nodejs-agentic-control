@@ -126,10 +126,12 @@ def list_crews(package_name: str | None = None) -> dict[str, list[dict]]:
         manifest = load_manifest(crewai_dir)
         crews = []
         for crew_name, crew_config in manifest.get("crews", {}).items():
-            crews.append({
-                "name": crew_name,
-                "description": crew_config.get("description", ""),
-            })
+            crews.append(
+                {
+                    "name": crew_name,
+                    "description": crew_config.get("description", ""),
+                }
+            )
         result[pkg_name] = crews
 
     return result
