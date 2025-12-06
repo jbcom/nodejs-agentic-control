@@ -76,8 +76,8 @@ Use conventional commits format:
 ### Building Documentation
 
 ```bash
-cd docs
-uv run --extra docs sphinx-build -b html . _build/html
+# From the project root
+uv run --project python sphinx-build -b html docs docs/_build/html
 ```
 
 ### Documentation Standards
