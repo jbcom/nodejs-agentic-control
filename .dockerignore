@@ -1,0 +1,36 @@
+# Git
+.git
+.gitignore
+
+# Dependencies (installed in container)
+node_modules
+python/.venv
+
+# Development files
+.cursor
+.github
+.vscode
+.idea
+*.md
+!README.md
+docs
+tests
+python/tests
+
+# Config files not needed in container
+.prettierrc
+.prettierignore
+tsconfig.json
+typedoc.json
+.aider*
+.clinerules
+.kiro
+
+# Cache and temp
+.cache
+*.log
+.npm
+.pnpm-store
+
+# Memory bank (dev only)
+memory-bank
