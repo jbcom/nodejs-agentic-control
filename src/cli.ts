@@ -821,6 +821,32 @@ triageCmd
     });
 
 // ============================================
+// Sandbox Commands (Local Single-Agent Mode)
+// ============================================
+
+const sandboxCmd = program
+    .command('sandbox')
+    .description('Local single-agent execution (low-cost alternative to fleet)');
+
+sandboxCmd
+    .command('run')
+    .description('Run a single agent task locally')
+    .argument('<task>', 'Task for the agent to accomplish')
+    .option('--dir <path>', 'Working directory', process.cwd())
+    .action(async (task, opts) => {
+        try {
+            const { sandbox } = await import('./sandbox/index.js');
+            
+            console.log('🔒 Sandbox mode (single agent, local execution)\n');
+            await sandbox.execute(task, opts.dir);
+            console.log('\n✅ Task complete');
+        } catch (err) {
+            console.error('❌ Sandbox execution failed:', err instanceof Error ? err.message : err);
+            process.exit(1);
+        }
+    });
+
+// ============================================
 // Handoff Commands
 // ============================================
 

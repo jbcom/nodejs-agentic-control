@@ -18,6 +18,10 @@
       "types": "./dist/fleet/index.d.ts",
       "import": "./dist/fleet/index.js"
     },
+    "./sandbox": {
+      "types": "./dist/sandbox/index.d.ts",
+      "import": "./dist/sandbox/index.js"
+    },
     "./triage": {
       "types": "./dist/triage/index.d.ts",
       "import": "./dist/triage/index.js"
