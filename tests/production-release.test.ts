@@ -499,7 +499,7 @@ describe('Production Release Properties', () => {
       
       // These should be constructable (type inference working)
       expect(() => new Fleet()).not.toThrow();
-      expect(() => new AIAnalyzer()).not.toThrow();
+      expect(() => new AIAnalyzer({ model: 'test-model' })).not.toThrow(); // Provide model to avoid API key requirement
       expect(() => new SandboxExecutor()).not.toThrow();
     });
   });
