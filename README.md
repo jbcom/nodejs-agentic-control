@@ -608,6 +608,37 @@ This package is designed with security in mind:
 - **ReDoS protection** - Regex patterns are designed to prevent denial of service
 - **No credential patterns in docs** - We don't document third-party API key formats
 
+### CI/CD Security Best Practices
+
+This project follows industry security best practices:
+
+#### GitHub Actions SHA Pinning
+All GitHub Actions are pinned to their full commit SHA instead of semantic version tags. This prevents supply-chain attacks where action maintainers could modify code behind version tags.
+
+**Example:**
+```yaml
+- uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+```
+
+Instead of:
+```yaml
+- uses: actions/checkout@v4  # ⚠️ Vulnerable to tag manipulation
+```
+
+#### npm Trusted Publishing (OIDC)
+Package publishing uses OpenID Connect (OIDC) authentication instead of long-lived tokens. This eliminates the risk of token leakage and provides cryptographic proof of package provenance.
+
+**Setup on npmjs.com:**
+1. Navigate to package settings → Publishing Access
+2. Add GitHub Actions as a trusted publisher
+3. Configure: `owner/repo`, `main` branch, `ci.yml` workflow, `release-node` job
+
+**Benefits:**
+- No `NPM_TOKEN` secret needed
+- Automatic provenance attestation
+- Cryptographic supply-chain transparency
+- Time-limited credentials per publish
+
 ## Development
 
 ```bash

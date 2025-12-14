@@ -76,9 +76,10 @@ These secrets power CI/CD:
 |--------|---------|
 | `CI_GITHUB_TOKEN` | GitHub API access |
 | `PYPI_TOKEN` | PyPI publishing |
-| `NPM_TOKEN` | npm publishing |
 | `DOCKERHUB_USERNAME` | Docker Hub login |
 | `DOCKERHUB_TOKEN` | Docker Hub publishing |
+
+**Note:** npm publishing uses OIDC Trusted Publishing (no token required).
 
 ## Troubleshooting
 
