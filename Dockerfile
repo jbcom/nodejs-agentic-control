@@ -60,15 +60,31 @@ RUN pip install --user --no-cache-dir "agentic-crew[crewai]"
 # Install agentic-control (TypeScript control plane)
 # =============================================================================
 
+# Setup pnpm for global installs (required for pnpm v9+)
+# Modern pnpm versions do not create a global bin directory by default.
+# This setup ensures cross-platform compatibility and is critical for:
+# - GitHub Actions Marketplace workflows
+# - Multi-architecture Docker builds (linux/amd64, linux/arm64)
+# - Local Docker image execution with global CLI access
+# Note: pnpm setup uses $HOME/.local/share/pnpm by default on Linux
+# For the 'agent' user (HOME=/home/agent), this resolves to /home/agent/.local/share/pnpm
+RUN pnpm setup && echo "pnpm setup completed successfully"
+ENV PNPM_HOME="/home/agent/.local/share/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+
 # Install agentic-control globally
 RUN pnpm add -g agentic-control
+
+# Verify installation
+RUN agentic-control --version
 
 # =============================================================================
 # Environment setup
 # =============================================================================
 
 # Add user local bin to PATH for agentic-crew CLI
-ENV PATH="/home/agent/.local/bin:/home/agent/.pnpm-global/bin:${PATH}"
+# Note: PNPM_HOME is already in PATH from earlier setup
+ENV PATH="/home/agent/.local/bin:${PATH}"
 
 # Default working directory for agent tasks
 WORKDIR /workspace
