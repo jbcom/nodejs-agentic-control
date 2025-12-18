@@ -40,8 +40,12 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "test": "vitest",
-    "format": "prettier --write src/",
-    "format:check": "prettier --check src/",
+    "lint": "biome lint src/",
+    "lint:fix": "biome lint --write src/",
+    "format": "biome format --write src/",
+    "format:check": "biome format src/",
+    "check": "biome check src/",
+    "check:fix": "biome check --write src/",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run build"
   },
@@ -49,13 +53,12 @@
     "vitest": ">=1.0.0"
   },
   "devDependencies": {
-    "@types/node": "^25.0.2",
-    "prettier": "^3.2.0",
+    "@types/node": "^22.15.0",
     "typescript": "^5.7.0",
     "vitest": "^4.0.14"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.0.0"
   },
   "keywords": [
     "vitest",

@@ -1,17 +1,33 @@
 {
   "$schema": "https://typedoc.org/schema.json",
-  "entryPoints": ["./src"],
+  "name": "agentic-control",
+  "entryPoints": [
+    "./packages/agentic-control/src/index.ts",
+    "./packages/vitest-agentic-control/src/index.ts"
+  ],
   "entryPointStrategy": "expand",
-  "tsconfig": "./tsconfig.json",
+  "out": "./docs/_build/api",
+  "theme": "default",
+  "readme": "./README.md",
   "excludeNotDocumented": false,
   "excludePrivate": true,
   "excludeProtected": false,
   "excludeInternal": true,
-  "excludeReferences": true,
-  "skipErrorChecking": true,
+  "excludeReferences": false,
+  "skipErrorChecking": false,
   "validation": {
-    "notExported": false,
-    "invalidLink": false,
+    "notExported": true,
+    "invalidLink": true,
     "notDocumented": false
-  }
+  },
+  "sort": ["source-order"],
+  "groupOrder": ["Classes", "Interfaces", "Type Aliases", "Functions", "Variables"],
+  "categoryOrder": ["Core", "Fleet", "Triage", "GitHub", "Handoff", "Sandbox", "Crews", "*"],
+  "navigationLinks": {
+    "GitHub": "https://github.com/jbdevprimary/agentic-control",
+    "npm": "https://www.npmjs.com/package/agentic-control"
+  },
+  "customCss": "./docs/_static/typedoc.css",
+  "includeVersion": true,
+  "sourceLinkTemplate": "https://github.com/jbdevprimary/agentic-control/blob/{gitRevision}/{path}#L{line}"
 }

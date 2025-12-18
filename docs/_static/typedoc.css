@@ -1,0 +1,150 @@
+/**
+ * TypeDoc custom styles for agentic-control
+ * Following jbcom design system:
+ * - Primary: #06b6d4 (cyan)
+ * - Background: #0a0f1a
+ * - Headings: Space Grotesk
+ * - Body: Inter
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+:root {
+  /* jbcom color palette */
+  --color-primary: #06b6d4;
+  --color-primary-dark: #0891b2;
+  --color-primary-light: #22d3ee;
+  --color-background: #0a0f1a;
+  --color-background-secondary: #111827;
+  --color-text: #f9fafb;
+  --color-text-muted: #9ca3af;
+  --color-border: #1f2937;
+  --color-accent: #8b5cf6;
+
+  /* Typography */
+  --font-heading: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+}
+
+/* Dark theme overrides */
+:root[data-theme="dark"] {
+  --color-background: #0a0f1a;
+  --color-background-secondary: #111827;
+}
+
+/* Base typography */
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
+
+h1, h2, h3, h4, h5, h6,
+.tsd-page-title,
+.tsd-kind-icon ~ span {
+  font-family: var(--font-heading);
+  font-weight: 600;
+}
+
+/* Navigation styling */
+.tsd-navigation {
+  background-color: var(--color-background-secondary);
+  border-right: 1px solid var(--color-border);
+}
+
+.tsd-navigation a {
+  color: var(--color-text-muted);
+  transition: color 0.2s ease;
+}
+
+.tsd-navigation a:hover {
+  color: var(--color-primary);
+}
+
+.tsd-navigation a.current {
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+/* Code blocks */
+pre, code {
+  font-family: var(--font-mono);
+  background-color: var(--color-background-secondary);
+  border-radius: 6px;
+}
+
+pre {
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+}
+
+/* Links */
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--color-primary-light);
+}
+
+/* Member signatures */
+.tsd-signature {
+  background-color: var(--color-background-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+}
+
+/* Kind icons */
+.tsd-kind-icon {
+  color: var(--color-primary);
+}
+
+/* Search */
+.tsd-search input {
+  background-color: var(--color-background-secondary);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-family: var(--font-body);
+}
+
+.tsd-search input:focus {
+  border-color: var(--color-primary);
+  outline: none;
+}
+
+/* Breadcrumbs */
+.tsd-breadcrumb a {
+  color: var(--color-text-muted);
+}
+
+.tsd-breadcrumb a:hover {
+  color: var(--color-primary);
+}
+
+/* Tags and badges */
+.tsd-tag {
+  background-color: var(--color-primary);
+  color: var(--color-background);
+  font-family: var(--font-body);
+  font-weight: 500;
+  border-radius: 4px;
+  padding: 0.125rem 0.5rem;
+}
+
+/* Panels and cards */
+.tsd-panel {
+  background-color: var(--color-background-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+/* Footer */
+footer {
+  background-color: var(--color-background-secondary);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+}

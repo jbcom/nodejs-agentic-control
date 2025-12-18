@@ -18,24 +18,24 @@ let envCleanup: (() => void) | null = null;
  * commonly needed across tests.
  */
 beforeEach(() => {
-    // Set up test environment with safe default values
-    envCleanup = withTestEnv({
-        GITHUB_TOKEN: 'ghp_test_token_12345',
-        ANTHROPIC_API_KEY: 'sk-ant-test-key-12345',
-        OPENAI_API_KEY: 'sk-test-key-12345',
-        TEST_ORG_TOKEN: 'ghp_test_org_token_12345',
-        ANOTHER_ORG_TOKEN: 'ghp_another_org_token_12345',
-        PR_REVIEW_TOKEN: 'ghp_pr_review_token_12345',
-        CREWAI_TESTING: 'true',
-    });
+  // Set up test environment with safe default values
+  envCleanup = withTestEnv({
+    GITHUB_TOKEN: 'ghp_test_token_12345',
+    ANTHROPIC_API_KEY: 'sk-ant-test-key-12345',
+    OPENAI_API_KEY: 'sk-test-key-12345',
+    TEST_ORG_TOKEN: 'ghp_test_org_token_12345',
+    ANOTHER_ORG_TOKEN: 'ghp_another_org_token_12345',
+    PR_REVIEW_TOKEN: 'ghp_pr_review_token_12345',
+    CREWAI_TESTING: 'true',
+  });
 });
 
 /**
  * Clean up test environment after each test.
  */
 afterEach(() => {
-    if (envCleanup) {
-        envCleanup();
-        envCleanup = null;
-    }
+  if (envCleanup) {
+    envCleanup();
+    envCleanup = null;
+  }
 });

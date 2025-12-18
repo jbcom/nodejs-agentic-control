@@ -48,9 +48,12 @@
     "dev:cli": "tsx src/cli.ts",
     "build": "tsc",
     "dev": "tsc --watch",
-    "lint": "echo 'Linting skipped - using TypeScript for type checking'",
-    "format": "prettier --write src/ tests/",
-    "format:check": "prettier --check src/ tests/",
+    "lint": "biome lint src/ tests/",
+    "lint:fix": "biome lint --write src/ tests/",
+    "format": "biome format --write src/ tests/",
+    "format:check": "biome format src/ tests/",
+    "check": "biome check src/ tests/",
+    "check:fix": "biome check --write src/ tests/",
     "test": "vitest",
     "test:coverage": "vitest --coverage",
     "typecheck": "tsc --noEmit",
@@ -98,15 +101,14 @@
   },
   "devDependencies": {
     "@ai-sdk/anthropic": "^2.0.53",
-    "@types/node": "^25.0.2",
-    "prettier": "^3.2.0",
+    "@types/node": "^22.15.0",
     "tsx": "4.21.0",
     "typescript": "^5.7.0",
     "vitest": "^4.0.14",
     "vitest-agentic-control": "workspace:*"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.0.0"
   },
   "keywords": [
     "ai",

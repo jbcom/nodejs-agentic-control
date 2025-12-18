@@ -9,23 +9,26 @@
     "dev": "pnpm -r --parallel dev",
     "test": "pnpm -r test",
     "test:coverage": "pnpm -r test:coverage",
-    "format": "prettier --write \"packages/*/src/**/*.ts\" \"packages/*/tests/**/*.ts\"",
-    "format:check": "prettier --check \"packages/*/src/**/*.ts\" \"packages/*/tests/**/*.ts\"",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "check": "biome check .",
+    "check:fix": "biome check --write .",
     "typecheck": "pnpm -r typecheck",
-    "lint": "pnpm -r lint",
+    "docs": "typedoc",
+    "docs:watch": "typedoc --watch",
     "clean": "pnpm -r exec rm -rf dist && rm -rf node_modules",
-    "prepublishOnly": "pnpm run build && pnpm run test"
+    "prepublishOnly": "pnpm run build && pnpm run test",
+    "prepare": "echo 'Run: pip install pre-commit && pre-commit install'"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.0.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
-    "@types/node": "^25.0.2",
-    "@typescript-eslint/eslint-plugin": "^8.50.0",
-    "@typescript-eslint/parser": "^8.50.0",
+    "@types/node": "^22.15.0",
     "@vitest/coverage-v8": "^4.0.14",
-    "eslint": "^8.56.0",
     "fast-check": "^4.4.0",
-    "prettier": "^3.2.0",
     "semantic-release": "^25.0.2",
     "tsx": "4.21.0",
     "typedoc": "^0.28.0",
@@ -33,7 +36,7 @@
     "vitest": "^4.0.14"
   },
   "engines": {
-    "node": ">=20.0.0",
+    "node": ">=22.0.0",
     "pnpm": ">=9.0.0"
   },
   "keywords": [

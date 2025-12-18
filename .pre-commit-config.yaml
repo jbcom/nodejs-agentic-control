@@ -1,0 +1,47 @@
+# Pre-commit configuration for agentic-control
+# Runs Biome for linting and formatting TypeScript/JavaScript files
+#
+# Installation:
+#   pip install pre-commit
+#   pre-commit install
+#
+# Usage:
+#   pre-commit run --all-files
+
+repos:
+  # Biome - Fast linter and formatter for JavaScript/TypeScript
+  - repo: https://github.com/biomejs/pre-commit
+    rev: "v2.3.10"
+    hooks:
+      - id: biome-check
+        name: biome check
+        description: "Run Biome linting and formatting checks"
+        additional_dependencies: ["@biomejs/biome@2.3.10"]
+        args: ["--write"]
+
+  # Standard pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: "^(docs/_build/|python/.*\\.pyc)"
+      - id: end-of-file-fixer
+        exclude: "^(docs/_build/|python/.*\\.pyc)"
+      - id: check-yaml
+      - id: check-json
+        exclude: "^tsconfig\\.json$"
+      - id: check-added-large-files
+        args: ["--maxkb=500"]
+      - id: check-merge-conflict
+      - id: detect-private-key
+
+  # TypeScript type checking
+  - repo: local
+    hooks:
+      - id: typecheck
+        name: typecheck
+        description: "Run TypeScript type checking"
+        entry: pnpm run typecheck
+        language: system
+        types: [ts, tsx]
+        pass_filenames: false

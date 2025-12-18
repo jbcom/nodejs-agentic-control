@@ -8,5 +8,5 @@
  * - Token-aware GitHub integration
  */
 
-export { Fleet, type FleetConfig, type CoordinationConfig, type SpawnContext } from './fleet.js';
 export { CursorAPI, type CursorAPIOptions } from './cursor-api.js';
+export { type CoordinationConfig, Fleet, type FleetConfig, type SpawnContext } from './fleet.js';

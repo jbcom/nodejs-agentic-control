@@ -5,6 +5,9 @@ dist/
 docs/_build/
 docs/api/python/_autosummary/
 
+# Biome cache
+.biome/
+
 # Dependencies
 node_modules/
 
