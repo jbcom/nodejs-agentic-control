@@ -1,0 +1,372 @@
+# Multi-AI PR Review Workflow
+# Provides comprehensive code review using multiple AI models for maximum coverage
+#
+# Reviews are performed by:
+#   1. OpenRouter (meta/auto model) via DiffGuard - intelligent model selection
+#   2. Claude Code Action - Anthropic's Claude for deep analysis
+#   3. OpenAI Codex Action - OpenAI's reasoning model
+#
+# Synced from jbcom-control-center (always-sync)
+# DO NOT EDIT - changes will be overwritten
+
+name: AI PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+  pull_request_review_comment:
+    types: [created]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  id-token: write
+
+# Prevent multiple reviews on rapid commits
+concurrency:
+  group: pr-review-${{ github.event.pull_request.number || github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  # ==========================================================================
+  # OpenRouter Review - Meta Model (Auto-routing to best model)
+  # Uses DiffGuard for structured code review with scoring
+  # ==========================================================================
+  openrouter-review:
+    name: OpenRouter Review
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' &&
+      !github.event.pull_request.draft &&
+      github.actor != 'dependabot[bot]'
+
+    steps:
+      # actions/checkout v6.0.1
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        with:
+          fetch-depth: 0
+
+      # jonit-dev/diffguard v1.0.0
+      - name: DiffGuard AI Review
+        uses: jonit-dev/diffguard@88f63615c769f8db6031973503c2c40a9a3f4feb
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          open_router_key: ${{ secrets.OPENROUTER_API_KEY }}
+          # Meta model - auto-routes to best available model
+          model_id: "openrouter/auto"
+          max_tokens: "8192"
+          custom_prompt: |
+            ### **AI PR Review Instructions**
+
+            **Objective:**  
+            Provide a clear, concise, and actionable review. Focus on:
+            - Security vulnerabilities and concerns
+            - Performance bottlenecks
+            - Code quality and maintainability
+            - Test coverage gaps
+            - Best practices violations
+
+            **Critical Instructions:**
+            - Be specific and actionable
+            - Link to exact line numbers when possible
+            - Prioritize HIGH impact issues
+            - Skip nitpicks and style preferences (we have linters for that)
+            - If the PR is good, say so briefly
+
+            **Scoring (0-100):**
+            - 90-100: Exceptional - ready to merge
+            - 75-89: Good - minor suggestions
+            - 60-74: Acceptable - needs some work
+            - 40-59: Below average - significant issues
+            - 0-39: Needs major revision
+
+            **Output Format:**
+            1. **Score** and brief summary
+            2. **Key Strengths** (2-3 points max)
+            3. **Issues Found** (table with severity)
+            4. **Recommendations** (actionable items)
+
+  # ==========================================================================
+  # Claude Review - Deep Analysis via Claude Code Action
+  # ==========================================================================
+  claude-review:
+    name: Claude Review
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'pull_request' &&
+       !github.event.pull_request.draft &&
+       github.actor != 'dependabot[bot]') ||
+      (github.event_name == 'issue_comment' &&
+       github.event.issue.pull_request &&
+       contains(github.event.comment.body, '@claude'))
+
+    steps:
+      # actions/checkout v6.0.1
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        with:
+          fetch-depth: 1
+
+      # anthropics/claude-code-action v1
+      - name: Claude Code Review
+        uses: anthropics/claude-code-action@928c84b37e02abd33f08826a2200058c68633a85
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          
+          # GitHub token for API access (required when workflow differs from main)
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          
+          # Allow bot-triggered workflows (e.g., Cursor agent PRs)
+          allowed_bots: '*'
+          
+          # Enable progress tracking for visibility
+          track_progress: true
+          
+          # Use sticky comments to avoid spam
+          use_sticky_comment: true
+          
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
+
+            Perform a thorough code review focusing on:
+
+            1. **Security**
+               - Authentication/authorization issues
+               - Input validation and sanitization
+               - Secrets or credentials exposed
+               - SQL injection, XSS, CSRF risks
+
+            2. **Architecture**
+               - Design pattern adherence
+               - Separation of concerns
+               - Scalability considerations
+               - Error handling strategy
+
+            3. **Code Quality**
+               - Readability and maintainability
+               - DRY violations
+               - Complex or confusing logic
+               - Missing documentation
+
+            4. **Testing**
+               - Test coverage adequacy
+               - Edge cases handled
+               - Test quality and assertions
+
+            5. **Performance**
+               - N+1 queries
+               - Memory leaks
+               - Expensive operations
+               - Caching opportunities
+
+            Provide inline comments for specific issues.
+            Use a summary comment for overall assessment.
+            Be constructive and specific with recommendations.
+
+          # Tools for comprehensive review
+          claude_args: |
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
+
+  # ==========================================================================
+  # OpenAI Codex Review - Reasoning-focused analysis
+  # ==========================================================================
+  codex-review:
+    name: Codex Review
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' &&
+      !github.event.pull_request.draft &&
+      github.actor != 'dependabot[bot]'
+
+    steps:
+      # actions/checkout v6.0.1
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        with:
+          fetch-depth: 0
+
+      # openai/codex-action v1.4
+      - name: Codex Code Review
+        uses: openai/codex-action@086169432f1d2ab2f4057540b1754d550f6a1189
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          sandbox: "read-only"
+          model: "o3"
+          effort: "high"
+          
+          # Allow bot-triggered workflows (e.g., Cursor agent PRs)
+          allow-bots: "true"
+          allow-users: "*"
+          
+          prompt: |
+            You are reviewing PR #${{ github.event.pull_request.number }} in ${{ github.repository }}.
+
+            Review the changes and provide feedback on:
+
+            1. **Logic & Correctness**
+               - Does the code do what it's supposed to do?
+               - Are there edge cases not handled?
+               - Any potential bugs or race conditions?
+
+            2. **Security Considerations**
+               - Any security vulnerabilities introduced?
+               - Proper input validation?
+               - Safe handling of sensitive data?
+
+            3. **Best Practices**
+               - Following language idioms?
+               - Good error handling?
+               - Appropriate abstractions?
+
+            Format your response as:
+            
+            ## Summary
+            [Brief overall assessment]
+
+            ## Issues Found
+            | Severity | File | Line | Issue |
+            |----------|------|------|-------|
+            | HIGH/MED/LOW | path | num | description |
+
+            ## Recommendations
+            - [Specific, actionable suggestions]
+
+            After analysis, post your review as a PR comment using:
+            gh pr comment ${{ github.event.pull_request.number }} --body "YOUR_REVIEW"
+
+  # ==========================================================================
+  # Mention-triggered reviews
+  # Respond to @claude, @codex mentions in PR comments
+  # ==========================================================================
+  mention-review:
+    name: Mention-triggered Review
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'issue_comment' &&
+      github.event.issue.pull_request &&
+      (contains(github.event.comment.body, '@claude') ||
+       contains(github.event.comment.body, '@codex') ||
+       contains(github.event.comment.body, '/review'))
+
+    steps:
+      # actions/checkout v6.0.1
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        with:
+          fetch-depth: 1
+
+      - name: Determine Reviewer
+        id: reviewer
+        run: |
+          COMMENT="${{ github.event.comment.body }}"
+          if [[ "$COMMENT" == *"@claude"* ]] || [[ "$COMMENT" == *"/review claude"* ]]; then
+            echo "reviewer=claude" >> $GITHUB_OUTPUT
+          elif [[ "$COMMENT" == *"@codex"* ]] || [[ "$COMMENT" == *"/review codex"* ]]; then
+            echo "reviewer=codex" >> $GITHUB_OUTPUT
+          else
+            echo "reviewer=claude" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Claude Review (on mention)
+        if: steps.reviewer.outputs.reviewer == 'claude'
+        uses: anthropics/claude-code-action@f0c8eb29807907de7f5412d04afceb5e24817127 # v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          allowed_bots: '*'
+          track_progress: true
+          use_sticky_comment: true
+          trigger_phrase: "@claude"
+          prompt: |
+            A user has requested your review with this comment:
+            "${{ github.event.comment.body }}"
+
+            Please review the PR and respond to their specific request.
+            If no specific request, provide a comprehensive code review.
+
+      - name: Codex Review (on mention)
+        if: steps.reviewer.outputs.reviewer == 'codex'
+        uses: openai/codex-action@086169432f1d2ab2f4057540b1754d550f6a1189 # v1.4
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          sandbox: "read-only"
+          model: "o3"
+          allow-bots: "true"
+          allow-users: "*"
+          prompt: |
+            A user has requested your review with this comment:
+            "${{ github.event.comment.body }}"
+
+            Please review the PR and respond to their specific request.
+            Post your response using:
+            gh pr comment ${{ github.event.issue.number }} --body "YOUR_RESPONSE"
+
+  # ==========================================================================
+  # Summary job - posts consolidated status
+  # ==========================================================================
+  review-summary:
+    name: Review Summary
+    runs-on: ubuntu-latest
+    needs: [openrouter-review, claude-review, codex-review]
+    if: always() && github.event_name == 'pull_request'
+
+    steps:
+      # actions/github-script v8
+      - name: Post Summary
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
+        with:
+          script: |
+            const openrouter = '${{ needs.openrouter-review.result }}';
+            const claude = '${{ needs.claude-review.result }}';
+            const codex = '${{ needs.codex-review.result }}';
+
+            const getEmoji = (result) => {
+              if (result === 'success') return '✅';
+              if (result === 'failure') return '❌';
+              if (result === 'skipped') return '⏭️';
+              return '⚠️';
+            };
+
+            const body = `## 🤖 AI Review Summary
+
+            | Reviewer | Status |
+            |----------|--------|
+            | OpenRouter (meta/auto) | ${getEmoji(openrouter)} ${openrouter} |
+            | Claude Code | ${getEmoji(claude)} ${claude} |
+            | OpenAI Codex | ${getEmoji(codex)} ${codex} |
+
+            ---
+            <sub>Reviews are automated. Please address any issues raised above before merging.</sub>`;
+
+            // Check if we already have a summary comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+            });
+
+            const existingComment = comments.find(c => 
+              c.user.type === 'Bot' && 
+              c.body.includes('🤖 AI Review Summary')
+            );
+
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: body
+              });
+            }

@@ -44,13 +44,15 @@ jobs:
       actions: read
 
     steps:
+      # actions/checkout v6.0.1
       - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
         with:
           fetch-depth: 1
 
+      # anthropics/claude-code-action v1
       - name: Run Claude Code
-        uses: anthropics/claude-code-action@f0c8eb29807907de7f5412d04afceb5e24817127 # v1.0.23
+        uses: anthropics/claude-code-action@928c84b37e02abd33f08826a2200058c68633a85
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
 
@@ -67,13 +69,15 @@ jobs:
       id-token: write
 
     steps:
+      # actions/checkout v6.0.1
       - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
         with:
           fetch-depth: 1
 
+      # anthropics/claude-code-action v1
       - name: Run Claude Code Review
-        uses: anthropics/claude-code-action@f0c8eb29807907de7f5412d04afceb5e24817127 # v1.0.23
+        uses: anthropics/claude-code-action@928c84b37e02abd33f08826a2200058c68633a85
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: |

@@ -1,0 +1,164 @@
+name: Auto Merge
+
+# Automatically merge PRs from trusted sources:
+# 1. Dependabot minor/patch updates (not major)
+# 2. Control center sync PRs (labeled with 'sync')
+
+on:
+  pull_request_target:
+    types: [opened, labeled, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    name: Auto Merge Trusted PRs
+    runs-on: ubuntu-latest
+
+    # Only run for Dependabot or sync-labeled PRs
+    if: |
+      github.actor == 'dependabot[bot]' ||
+      contains(github.event.pull_request.labels.*.name, 'sync')
+
+    steps:
+      # actions/checkout v6.0.1 (pinned for security)
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+
+      - name: Check if auto-merge eligible
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_ACTOR: ${{ github.actor }}
+        run: |
+          echo "Checking PR #$PR_NUMBER for auto-merge eligibility..."
+          echo "Actor: $PR_ACTOR"
+          echo "Title: $PR_TITLE"
+
+          ELIGIBLE="false"
+          REASON=""
+
+          # Check if this is a Dependabot PR
+          if [[ "$PR_ACTOR" == "dependabot[bot]" ]]; then
+            # Extract major versions from PR title
+            # Handles both "from 1.2.3 to 2.0.0" and "from 3 to 4" formats
+            FROM_MAJOR=$(echo "$PR_TITLE" | grep -oiE 'from [0-9]+' | head -1 | grep -oE '[0-9]+')
+            TO_MAJOR=$(echo "$PR_TITLE" | grep -oiE 'to [0-9]+' | head -1 | grep -oE '[0-9]+')
+            
+            echo "Detected versions: from=$FROM_MAJOR to=$TO_MAJOR"
+            
+            # If we can extract both versions and they differ, it's a major update
+            if [[ -n "$FROM_MAJOR" && -n "$TO_MAJOR" && "$FROM_MAJOR" != "$TO_MAJOR" ]]; then
+              REASON="Major version update ($FROM_MAJOR → $TO_MAJOR) requires manual review"
+              # ELIGIBLE stays false
+            elif [[ -n "$FROM_MAJOR" && -n "$TO_MAJOR" ]]; then
+              # Same major version = minor/patch update
+              ELIGIBLE="true"
+              REASON="Dependabot minor/patch update (v$FROM_MAJOR.x)"
+            else
+              # Can't parse versions - be safe, don't auto-merge
+              REASON="Could not parse version from title - manual review required"
+              # ELIGIBLE stays false
+            fi
+          fi
+
+          # Check if this is a sync PR (overrides Dependabot check)
+          if gh pr view "$PR_NUMBER" --json labels -q '.labels[].name' 2>/dev/null | grep -q '^sync$'; then
+            ELIGIBLE="true"
+            REASON="Control center sync PR"
+          fi
+
+          echo "eligible=$ELIGIBLE" >> $GITHUB_OUTPUT
+          echo "reason=$REASON" >> $GITHUB_OUTPUT
+          
+          if [[ "$ELIGIBLE" == "true" ]]; then
+            echo "✅ Auto-merge eligible: $REASON"
+          else
+            echo "⏸️ Not auto-merging: $REASON"
+          fi
+
+      - name: Wait for CI checks
+        if: steps.check.outputs.eligible == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          echo "Waiting for CI checks to complete..."
+          
+          # Wait up to 10 minutes for checks
+          MAX_WAIT=600
+          WAIT_INTERVAL=30
+          ELAPSED=0
+          
+          while [[ $ELAPSED -lt $MAX_WAIT ]]; do
+            # Get check status with error handling
+            if ! RAW_STATUS=$(gh pr checks "$PR_NUMBER" --json state -q '.[].state' 2>&1); then
+              echo "⚠️ Failed to fetch PR checks: $RAW_STATUS"
+              # Retry after interval
+              sleep $WAIT_INTERVAL
+              ELAPSED=$((ELAPSED + WAIT_INTERVAL))
+              continue
+            fi
+            
+            STATUS=$(echo "$RAW_STATUS" | sort -u)
+            
+            # Handle case where no CI checks are configured
+            if [[ -z "$STATUS" ]]; then
+              echo "ℹ️ No CI checks found for this PR"
+              echo "⏸️ Skipping auto-merge - manual verification required"
+              exit 1
+            fi
+            
+            # Check if any are still pending
+            if echo "$STATUS" | grep -qE 'PENDING|IN_PROGRESS|QUEUED'; then
+              echo "Checks still running... waiting ${WAIT_INTERVAL}s (${ELAPSED}s elapsed)"
+              sleep $WAIT_INTERVAL
+              ELAPSED=$((ELAPSED + WAIT_INTERVAL))
+            elif echo "$STATUS" | grep -q 'FAILURE'; then
+              echo "❌ CI checks failed - not auto-merging"
+              exit 1
+            else
+              echo "✅ All CI checks passed"
+              break
+            fi
+          done
+          
+          if [[ $ELAPSED -ge $MAX_WAIT ]]; then
+            echo "⚠️ Timeout waiting for CI checks"
+            exit 1
+          fi
+
+      - name: Enable auto-merge
+        if: steps.check.outputs.eligible == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REASON: ${{ steps.check.outputs.reason }}
+        run: |
+          echo "Enabling auto-merge for PR #$PR_NUMBER"
+          echo "Reason: $REASON"
+          
+          # Enable auto-merge with squash
+          gh pr merge "$PR_NUMBER" --auto --squash --delete-branch
+          
+          echo "✅ Auto-merge enabled"
+
+      - name: Add comment
+        if: steps.check.outputs.eligible == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REASON: ${{ steps.check.outputs.reason }}
+        run: |
+          gh pr comment "$PR_NUMBER" --body "🤖 **Auto-merge enabled**
+
+          This PR will be automatically merged once all CI checks pass.
+
+          **Reason:** $REASON
+
+          ---
+          *To disable auto-merge, run: \`gh pr merge --disable-auto\`*"

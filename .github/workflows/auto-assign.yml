@@ -1,0 +1,59 @@
+# Auto-Assign Copilot to Issues and PRs
+# Synced from jbcom/control-center (always-sync)
+#
+# Assigns GitHub Copilot Coding Agent to new issues and PRs,
+# enabling autonomous code generation and review.
+#
+# Requirements:
+# - Copilot Enterprise or Copilot for Business with Coding Agent enabled
+# - Repository must have Copilot Coding Agent access
+#
+# Note: Copilot will only act on issues/PRs it can understand.
+# Complex issues may need human intervention.
+
+name: Auto Assign Copilot
+
+on:
+  issues:
+    types: [opened]
+  pull_request:
+    types: [opened]
+
+jobs:
+  assign-copilot:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    
+    steps:
+      # pozil/auto-assign-issue v2.2.0
+      - name: Auto-assign Copilot to issue
+        if: github.event_name == 'issues'
+        uses: pozil/auto-assign-issue@39c06395cbac76e79afc4ad4e5c5c6db6ecfdd2e
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          assignees: copilot
+          numOfAssignee: 1
+      
+      # pozil/auto-assign-issue v2.2.0
+      - name: Auto-assign Copilot to PR
+        if: github.event_name == 'pull_request'
+        uses: pozil/auto-assign-issue@39c06395cbac76e79afc4ad4e5c5c6db6ecfdd2e
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          assignees: copilot
+          numOfAssignee: 1
+          
+      # actions/github-script v8
+      - name: Add triage label to issues
+        if: github.event_name == 'issues'
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
+        with:
+          script: |
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['copilot-assigned']
+            });
