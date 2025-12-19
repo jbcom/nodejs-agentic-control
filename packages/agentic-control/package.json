@@ -62,7 +62,7 @@
   "dependencies": {
     "@ai-sdk/mcp": "^0.0.12",
     "@inquirer/prompts": "8.1.0",
-    "@modelcontextprotocol/sdk": "^1.25.0",
+    "@modelcontextprotocol/sdk": "^1.25.1",
     "@octokit/rest": "^22.0.1",
     "ai": "^5.0.113",
     "commander": "^14.0.2",
