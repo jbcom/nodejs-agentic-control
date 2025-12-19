@@ -76,10 +76,9 @@ These secrets power CI/CD:
 |--------|---------|
 | `CI_GITHUB_TOKEN` | GitHub API access |
 | `PYPI_TOKEN` | PyPI publishing |
+| `NPM_TOKEN` | npm publishing |
 | `DOCKERHUB_USERNAME` | Docker Hub login |
 | `DOCKERHUB_TOKEN` | Docker Hub publishing |
-
-**Note:** npm publishing uses OIDC Trusted Publishing (no token required).
 
 ## Troubleshooting
 
@@ -92,7 +91,7 @@ Token lacks required scopes. Check:
 
 ### "Rate limit exceeded"
 
-Use authenticated requests:
+Use authenticated requests (gh CLI auto-uses GITHUB_TOKEN):
 ```bash
-GH_TOKEN="$GITHUB_JBCOM_TOKEN" gh api ...
+gh api ...
 ```
