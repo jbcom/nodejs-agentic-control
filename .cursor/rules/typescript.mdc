@@ -1,0 +1,123 @@
+---
+description: TypeScript coding standards
+globs: "**/*.ts,**/*.tsx"
+---
+
+# TypeScript Standards
+
+## Types
+
+- **Avoid `any`** - Use `unknown` if type is truly unknown
+- **Explicit return types** on public functions
+- **Interfaces** for object shapes
+- **Types** for unions and intersections
+
+```typescript
+// ✅ Good
+interface User {
+  id: string;
+  name: string;
+}
+
+type Status = "pending" | "active" | "completed";
+
+function getUser(id: string): Promise<User> {
+  // ...
+}
+
+// ❌ Avoid
+function getUser(id: any): any { ... }
+```
+
+## Naming
+
+| Element | Convention | Example |
+|---------|------------|---------|
+| Variables/Functions | camelCase | `getUserData()` |
+| Types/Interfaces/Classes | PascalCase | `UserService` |
+| Constants | UPPER_CASE | `MAX_RETRIES` |
+| Generics | Single uppercase | `T`, `K`, `V` |
+
+## Strict Mode
+
+Always use strict TypeScript:
+
+```json
+// tsconfig.json
+{
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true
+  }
+}
+```
+
+## Async/Await
+
+```typescript
+// ✅ Prefer async/await
+async function fetchData(): Promise<Data> {
+  const response = await fetch(url);
+  return response.json();
+}
+
+// ❌ Avoid raw promises when possible
+function fetchData(): Promise<Data> {
+  return fetch(url).then(r => r.json());
+}
+```
+
+## Error Handling
+
+```typescript
+// ✅ Typed errors
+class ValidationError extends Error {
+  constructor(
+    message: string,
+    public readonly field: string
+  ) {
+    super(message);
+    this.name = "ValidationError";
+  }
+}
+
+// ✅ Result pattern for expected failures
+type Result<T, E = Error> = 
+  | { success: true; data: T }
+  | { success: false; error: E };
+```
+
+## Package Management
+
+- **Runtime**: Node.js 22+
+- **Package Manager**: pnpm
+- **Lock file**: `pnpm-lock.yaml` (commit this)
+
+```bash
+# Install
+pnpm install
+
+# Add dependency
+pnpm add axios
+
+# Add dev dependency
+pnpm add -D typescript
+
+# Build
+pnpm run build
+```
+
+## Testing
+
+```typescript
+// Use vitest or jest
+import { describe, it, expect } from "vitest";
+
+describe("UserService", () => {
+  it("should create user", async () => {
+    const user = await service.create({ name: "Test" });
+    expect(user.id).toBeDefined();
+  });
+});
+```
