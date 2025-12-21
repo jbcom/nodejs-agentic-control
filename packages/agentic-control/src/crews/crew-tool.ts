@@ -94,10 +94,10 @@ export class CrewTool {
 
   constructor(config?: CrewToolConfig) {
     const validated = validateConfig(config ?? {});
-    // Zod provides defaults for invokeMethod and defaultTimeout
+    // Zod provides defaults for invokeMethod and defaultTimeout, so they are always defined
     this.config = {
-      invokeMethod: validated.invokeMethod!,
-      defaultTimeout: validated.defaultTimeout!,
+      invokeMethod: validated.invokeMethod ?? 'uv',
+      defaultTimeout: validated.defaultTimeout ?? 300000,
       env: validated.env ?? {},
     };
   }
