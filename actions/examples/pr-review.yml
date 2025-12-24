@@ -1,0 +1,15 @@
+name: 'PR Review Example'
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  pr_review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Run Agentic PR Review'
+        uses: jbcom/agentic-control/actions/agentic-pr-review@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          model: 'llama3'

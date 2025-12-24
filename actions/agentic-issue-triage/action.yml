@@ -1,0 +1,49 @@
+name: 'Agentic Issue Triage'
+description: 'Triage a GitHub issue using an AI agent.'
+author: 'jbcom/agentic-control'
+
+inputs:
+  github_token:
+    description: 'The GitHub token to use for authentication.'
+    required: true
+  issue_number:
+    description: 'The number of the issue to triage.'
+    required: true
+  model:
+    description: 'The Ollama model to use for the triage.'
+    required: false
+    default: 'llama3'
+  api_key:
+    description: 'The API key for the model.'
+    required: false
+
+outputs:
+  triage_summary:
+    description: 'A summary of the triage.'
+  labels:
+    description: 'The labels suggested by the agent.'
+  assignee:
+    description: 'The assignee suggested by the agent.'
+
+branding:
+  icon: 'alert-circle'
+  color: 'orange'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: 'Checkout code'
+      uses: actions/checkout@v4
+
+    - name: 'Install dependencies'
+      shell: bash
+      run: pnpm install --frozen-lockfile
+
+    - name: 'Run issue triage'
+      shell: bash
+      run: |
+        pnpm exec agentic-control issue-triage \
+          --issue-number "${{ inputs.issue_number }}" \
+          --model "${{ inputs.model }}" \
+          --api-key "${{ inputs.api_key }}" \
+          --github-token "${{ inputs.github_token }}"

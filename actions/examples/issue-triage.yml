@@ -1,0 +1,16 @@
+name: 'Issue Triage Example'
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  issue_triage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Run Agentic Issue Triage'
+        uses: jbcom/agentic-control/actions/agentic-issue-triage@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          issue_number: ${{ github.event.issue.number }}
+          model: 'llama3'
