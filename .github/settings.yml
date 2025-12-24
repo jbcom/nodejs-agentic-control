@@ -1,13 +1,143 @@
-# Repository settings - Node.js ecosystem
-# Inherits from organization .github repository
-# Only overrides language-specific configurations
+# Repository settings synced via https://probot.github.io/apps/settings/
+# Installed on jbcom organization
+#
+# This file is synced to all repos via jbcom-control-center.
+# Individual repos inherit these defaults and can override specific settings.
+#
+# DO NOT EDIT in target repos - changes will be overwritten by control-center sync.
 
-# Inherit all settings from organization .github repository
-_extends: .github
+# =============================================================================
+# Repository Settings
+# https://docs.github.com/en/rest/reference/repos#update-a-repository
+# =============================================================================
+repository:
+  # Core features
+  has_issues: true
+  has_projects: true
+  has_wiki: false
+  has_downloads: false
+  
+  # Default branch
+  default_branch: main
+  
+  # Merge settings - squash only, clean PRs
+  allow_squash_merge: true
+  allow_merge_commit: false
+  allow_rebase_merge: false
+  delete_branch_on_merge: true
+  
+  # Security
+  enable_automated_security_fixes: true
+  enable_vulnerability_alerts: true
 
-# Node.js-specific overrides
+# =============================================================================
+# Labels
+# Standard labels synced across all repositories
+# =============================================================================
+labels:
+  # Priority labels
+  - name: "priority: critical"
+    color: b60205
+    description: Critical priority - must fix immediately
+  - name: "priority: high"
+    color: d93f0b
+    description: High priority
+  - name: "priority: medium"
+    color: fbca04
+    description: Medium priority
+  
+  # Type labels
+  - name: bug
+    color: d73a4a
+    description: Something isn't working
+  - name: enhancement
+    color: a2eeef
+    description: New feature or request
+  - name: documentation
+    color: "0075ca"
+    description: Improvements or additions to documentation
+  - name: epic
+    color: "7057ff"
+    description: Epic issue tracking multiple sub-tasks
+  
+  # Workflow labels
+  - name: "good first issue"
+    color: "7057ff"
+    description: Good for newcomers
+  - name: "help wanted"
+    color: "008672"
+    description: Extra attention is needed
+  - name: question
+    color: d876e3
+    description: Further information is requested
+  - name: duplicate
+    color: cfd3d7
+    description: This issue or pull request already exists
+  - name: invalid
+    color: e4e669
+    description: This doesn't seem right
+  - name: ci
+    color: d0cce4
+    description: CI/CD related
+  
+  # Queue labels
+  - name: queued
+    color: bdba7f
+    description: Queued for processing
+  - name: dequeued
+    color: "648202"
+    description: Removed from queue
+  - name: extraction
+    color: 0E8A16
+    description: Work being extracted from integration branch
+  
+  # AI Agent labels
+  - name: "Amazon Q development agent"
+    color: 008dff
+    description: Generate new features or iterate code based on issue descriptions and comments.
+  - name: "Amazon Q transform agent"
+    color: 7f33ff
+    description: Upgrade codebase to latest language version.
+  - name: codex
+    color: ededed
+    description: Codex AI agent
+  - name: copilot-assigned
+    color: 6f42c1
+    description: Assigned to GitHub Copilot Coding Agent
+
+# =============================================================================
+# Repository Rulesets
+# https://docs.github.com/en/rest/repos/rules#update-a-repository-ruleset
+# =============================================================================
 rulesets:
-  # Override PR branch rules with Node.js-specific linters
+  # Main branch protection
+  - name: Main
+    target: branch
+    enforcement: active
+    conditions:
+      ref_name:
+        include:
+          - "~DEFAULT_BRANCH"
+        exclude: []
+    bypass_actors:
+      # Repository admins can bypass
+      - actor_id: 5
+        actor_type: RepositoryRole
+        bypass_mode: always
+    rules:
+      - type: non_fast_forward
+      - type: required_linear_history
+      - type: pull_request
+        parameters:
+          allowed_merge_methods:
+            - squash
+          dismiss_stale_reviews_on_push: false
+          require_code_owner_review: false
+          require_last_push_approval: false
+          required_approving_review_count: 0
+          required_review_thread_resolution: true
+
+  # PR branch rules - AI code review
   - name: PRs
     target: branch
     enforcement: active
@@ -22,11 +152,16 @@ rulesets:
         parameters:
           review_draft_pull_requests: false
           review_on_push: true
-      - type: copilot_code_review_analysis_tools
-        parameters:
-          tools:
-            - name: "CodeQL"
-            - name: "ESLint"  # Node.js-specific linter
       - type: code_quality
         parameters:
           severity: errors
+
+# =============================================================================
+# Environments
+# https://docs.github.com/en/rest/deployments/environments
+# =============================================================================
+environments:
+  - name: github-pages
+    deployment_branch_policy:
+      protected_branches: false
+      custom_branch_policies: true
