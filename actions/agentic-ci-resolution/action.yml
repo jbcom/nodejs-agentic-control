@@ -1,43 +1,56 @@
 name: 'Agentic CI Resolution'
-description: 'Automatically fix CI failures using an AI agent.'
-author: 'jbcom/agentic-control'
+description: 'Automatically analyze and resolve CI failures and PR feedback'
+author: 'Jon Bogaty'
+branding:
+  icon: 'zap'
+  color: 'green'
 
 inputs:
   github_token:
-    description: 'The GitHub token to use for authentication.'
+    description: 'GitHub token for API access'
     required: true
-  model:
-    description: 'The Ollama model to use for the fix.'
+  pr_number:
+    description: 'PR number to resolve (defaults to current PR)'
     required: false
-    default: 'llama3'
-  api_key:
-    description: 'The API key for the model.'
+  repo:
+    description: 'Repository in owner/repo format'
     required: false
-
-outputs:
-  fix_summary:
-    description: 'A summary of the fix.'
-
-branding:
-  icon: 'tool'
-  color: 'green'
+  iterations:
+    description: 'Maximum number of resolution iterations'
+    required: false
+    default: '5'
 
 runs:
   using: 'composite'
   steps:
-    - name: 'Checkout code'
-      uses: actions/checkout@v4
+    - name: Setup Node.js
+      uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
       with:
-        fetch-depth: 0
+        node-version: '22'
 
-    - name: 'Install dependencies'
+    - name: Run CI Resolution
       shell: bash
-      run: pnpm install --frozen-lockfile
-
-    - name: 'Run CI resolution'
-      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
-        pnpm exec agentic-control ci-resolution \
-          --model "${{ inputs.model }}" \
-          --api-key "${{ inputs.api_key }}" \
-          --github-token "${{ inputs.github_token }}"
+        PR_NUM="${{ inputs.pr_number }}"
+        if [ -z "$PR_NUM" ] || [ "$PR_NUM" = "null" ]; then
+          # Safe retrieval of PR number from GITHUB_EVENT_PATH
+          if [ -f "$GITHUB_EVENT_PATH" ]; then
+            PR_NUM=$(jq -r '.pull_request.number // .number // empty' "$GITHUB_EVENT_PATH")
+          fi
+        fi
+        
+        if [ -z "$PR_NUM" ] || [ "$PR_NUM" = "null" ]; then
+          echo "❌ Error: Could not determine PR number. Please provide 'pr_number' input or run in a PR context." >&2
+          exit 1
+        fi
+        
+        REPO="${{ inputs.repo }}"
+        if [ -z "$REPO" ]; then
+          REPO="$GITHUB_REPOSITORY"
+        fi
+        
+        # Use exact pinned version of @agentic/control to prevent supply chain attacks (CWE-829)
+        npx @agentic/control@1.1.0 triage fix "$PR_NUM" --repo "$REPO" --iterations "${{ inputs.iterations }}"

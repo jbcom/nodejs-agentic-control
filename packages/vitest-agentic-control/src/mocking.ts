@@ -1,9 +1,9 @@
 /**
- * Core mocking utilities for agentic-control testing.
+ * Core mocking utilities for @agentic/control testing.
  *
  * This module provides the main `AgenticMocker` class that wraps Vitest's
  * mocking capabilities and provides convenience methods for mocking
- * agentic-control components.
+ * @agentic/control components.
  *
  * @module mocking
  */
@@ -30,14 +30,14 @@ export interface AgenticMockerOptions {
 }
 
 /**
- * Main mocker class for comprehensive agentic-control testing.
+ * Main mocker class for comprehensive @agentic/control testing.
  *
- * This class provides a unified interface for mocking all agentic-control
+ * This class provides a unified interface for mocking all @agentic/control
  * components: MCP servers, AI providers, sandbox execution, and more.
  *
  * @example Basic usage
  * ```typescript
- * import { AgenticMocker } from 'vitest-agentic-control';
+ * import { AgenticMocker } from 'vitest-@agentic/control';
  *
  * const mocker = new AgenticMocker();
  *
@@ -104,9 +104,9 @@ export class AgenticMocker {
   }
 
   /**
-   * Mock all agentic-control framework modules.
+   * Mock all @agentic/control framework modules.
    *
-   * This mocks the common modules used in agentic-control:
+   * This mocks the common modules used in @agentic/control:
    * - MCP SDK modules
    * - AI SDK modules
    * - GitHub client modules
@@ -220,7 +220,7 @@ export class AgenticMocker {
  *
  * @example
  * ```typescript
- * import { createAgenticMocker } from 'vitest-agentic-control';
+ * import { createAgenticMocker } from 'vitest-@agentic/control';
  *
  * const mocker = createAgenticMocker();
  * mocker.mcp.mockServer('test', { tools: [] });

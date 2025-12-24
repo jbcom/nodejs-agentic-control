@@ -1,45 +1,40 @@
 name: 'Agentic Orchestrator'
-description: 'Run a full multi-agent orchestration.'
-author: 'jbcom/agentic-control'
+description: 'AI agent fleet orchestration and coordination'
+author: 'Jon Bogaty'
+branding:
+  icon: 'command'
+  color: 'purple'
 
 inputs:
   github_token:
-    description: 'The GitHub token to use for authentication.'
+    description: 'GitHub token for API access'
     required: true
-  config_path:
-    description: 'The path to the orchestration configuration file.'
-    required: true
-  model:
-    description: 'The default Ollama model to use for the orchestration.'
+  command:
+    description: 'Orchestration command (list, status, coordinate, summary)'
     required: false
-    default: 'llama3'
-  api_key:
-    description: 'The API key for the model.'
+    default: 'summary'
+  args:
+    description: 'Additional arguments for the command'
     required: false
-
-outputs:
-  orchestration_summary:
-    description: 'A summary of the orchestration.'
-
-branding:
-  icon: 'cpu'
-  color: 'blue'
 
 runs:
   using: 'composite'
   steps:
-    - name: 'Checkout code'
-      uses: actions/checkout@v4
+    - name: Setup Node.js
+      uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+      with:
+        node-version: '22'
 
-    - name: 'Install dependencies'
+    - name: Run Orchestrator
       shell: bash
-      run: pnpm install --frozen-lockfile
-
-    - name: 'Run orchestrator'
-      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+        ORCH_CMD: ${{ inputs.command }}
+        ORCH_ARGS: ${{ inputs.args }}
       run: |
-        pnpm exec agentic-control orchestrate \
-          --config "${{ inputs.config_path }}" \
-          --model "${{ inputs.model }}" \
-          --api-key "${{ inputs.api_key }}" \
-          --github-token "${{ inputs.github_token }}"
+        # Use exact pinned version of @agentic/control to prevent supply chain attacks (CWE-829)
+        # and use environment variables for safe argument passing.
+        # Note: We split ORCH_ARGS into an array to avoid command injection while allowing multiple flags.
+        read -r -a ARGS_ARRAY <<< "$ORCH_ARGS"
+        npx @agentic/control@1.1.0 fleet "$ORCH_CMD" "${ARGS_ARRAY[@]}"

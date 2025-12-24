@@ -41,7 +41,7 @@ runs:
 
     - name: Install agentic-control
       shell: bash
-      run: npm install -g agentic-control@${{ inputs.version }}
+      run: npm install -g @agentic/control@${{ inputs.version }}
 
     - name: Run command
       id: run
@@ -51,7 +51,7 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
         # Build command
-        CMD="agentic-control ${{ inputs.command }}"
+        CMD="npx @agentic/control ${{ inputs.command }}"
 
         if [ -n "${{ inputs.args }}" ]; then
           CMD="$CMD ${{ inputs.args }}"

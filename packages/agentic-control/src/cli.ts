@@ -13,7 +13,7 @@ import { existsSync, writeFileSync } from 'node:fs';
 import { Command, InvalidArgumentError, Option } from 'commander';
 import { getConfig, getDefaultModel, getFleetDefaults, initConfig } from './core/config.js';
 import { safeGitCommand } from './core/subprocess.js';
-import { extractOrg, getConfiguredOrgs, getTokenSummary, validateTokens } from './core/tokens.js';
+import { extractOrg, getConfiguredOrgs, getTokenForRepo, getTokenSummary, validateTokens } from './core/tokens.js';
 import type { Agent, Result } from './core/types.js';
 import { Fleet } from './fleet/index.js';
 import { HandoffManager } from './handoff/index.js';
@@ -452,8 +452,8 @@ fleetCmd
 
       if (opts.json) {
         output(result.data, true);
-      } else if (result.data) {
-        const s = result.data;
+      } else {
+        const s = result.data || [];
         console.log('=== Fleet Summary ===\n');
         console.log(`Total:     ${s.total}`);
         console.log(`Running:   ${s.running}`);
@@ -749,6 +749,118 @@ triageCmd
       console.log(`   ${review.overallAssessment}`);
     } catch (err) {
       console.error('❌ Review failed:', err instanceof Error ? err.message : err);
+      process.exit(1);
+    }
+  });
+
+triageCmd
+  .command('pr')
+  .description('AI-powered PR triage and analysis')
+  .argument('<pr-number>', 'PR number to triage', (v) => parsePositiveInt(v, 'pr-number'))
+  .option('--repo <owner/repo>', 'Repository (defaults to config)')
+  .option('--json', 'Output as JSON')
+  .action(async (prNumber, opts) => {
+    try {
+      const { Triage } = await import('./triage/triage.js');
+      const cfg = getConfig();
+      const repo = opts.repo || cfg.defaultRepository;
+
+      if (!repo) {
+        console.error('❌ Repository is required. Use --repo or set defaultRepository in config.');
+        process.exit(1);
+      }
+
+      const token = getTokenForRepo(repo);
+      if (!token) {
+        console.error(`❌ Token not found for repository "${repo}". Check your configuration or GITHUB_TOKEN environment variable.`);
+        process.exit(1);
+      }
+
+      const triage = new Triage({
+        github: {
+          token,
+          repo,
+        },
+        resolver: {
+          workingDirectory: process.cwd(),
+        },
+      });
+
+      console.log(`🔍 Triaging PR #${prNumber} in ${repo}...`);
+      const result = await triage.analyze(prNumber);
+
+      if (opts.json) {
+        output(result, true);
+      } else {
+        console.log(triage.formatTriageReport(result));
+      }
+    } catch (err) {
+      console.error('❌ PR triage failed:', err instanceof Error ? err.message : err);
+      process.exit(1);
+    }
+  });
+
+triageCmd
+  .command('fix')
+  .description('Automatically resolve issues in a Pull Request')
+  .argument('<pr-number>', 'PR number to fix', (v) => parsePositiveInt(v, 'pr-number'))
+  .option('--repo <owner/repo>', 'Repository (defaults to config)')
+  .option('--iterations <number>', 'Max iterations', '5')
+  .action(async (prNumber, opts) => {
+    try {
+      const { Triage } = await import('./triage/triage.js');
+      const cfg = getConfig();
+      const repo = opts.repo || cfg.defaultRepository;
+
+      if (!repo) {
+        console.error('❌ Repository is required. Use --repo or set defaultRepository in config.');
+        process.exit(1);
+      }
+
+      const token = getTokenForRepo(repo);
+      if (!token) {
+        console.error(`❌ Token not found for repository "${repo}". Check your configuration or GITHUB_TOKEN environment variable.`);
+        process.exit(1);
+      }
+
+      const triage = new Triage({
+        github: {
+          token,
+          repo,
+        },
+        resolver: {
+          workingDirectory: process.cwd(),
+        },
+      });
+
+      console.log(`🚀 Starting CI/PR resolution for PR #${prNumber} in ${repo}...`);
+
+      const result = await triage.runUntilReady(prNumber, {
+        maxIterations: Number.parseInt(opts.iterations, 10),
+        onProgress: (t, i) => {
+          console.log(`\nIteration ${i}: Status = ${t.status}`);
+          console.log(`Unaddressed feedback: ${t.feedback.unaddressed}`);
+          console.log(`Blockers: ${t.blockers.length}`);
+        },
+      });
+
+      console.log('\n=== Resolution Summary ===\n');
+      console.log(`Success: ${result.success ? '✅' : '❌'}`);
+      console.log(`Iterations: ${result.iterations}`);
+      console.log(`Final Status: ${result.finalTriage.status}`);
+
+      if (result.allActions.length > 0) {
+        console.log(`\nActions Taken (${result.allActions.length}):`);
+        for (const action of result.allActions) {
+          console.log(`- [${action.success ? '✅' : '❌'}] ${action.action}: ${action.description}`);
+        }
+      }
+
+      if (!result.success) {
+        process.exit(1);
+      }
+    } catch (err) {
+      console.error('❌ PR resolution failed:', err instanceof Error ? err.message : err);
       process.exit(1);
     }
   });

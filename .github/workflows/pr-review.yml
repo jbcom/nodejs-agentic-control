@@ -37,12 +37,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
 
       - name: Setup Ollama
-        uses: ai-action/setup-ollama@v1
+        uses: ai-action/setup-ollama@9ab612864ffa0fa8c8ea1167ed89d326e39fd0fe # v2.0.0
         with:
           model: glm-4.6:cloud
 
@@ -55,7 +55,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: AI Review
-        uses: ai-action/ollama-action@v1
+        uses: ai-action/ollama-action@be18a6c5c9977cc0510d1d705edd02d574269c93 # v2.0.0
         id: review
         with:
           model: glm-4.6:cloud
@@ -95,7 +95,7 @@ jobs:
           OLLAMA_API_KEY: ${{ secrets.OLLAMA_API_KEY }}
 
       - name: Post Review Comment
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
             const review = `${{ steps.review.outputs.response }}`;
@@ -148,12 +148,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
 
       - name: Setup Ollama
-        uses: ai-action/setup-ollama@v1
+        uses: ai-action/setup-ollama@9ab612864ffa0fa8c8ea1167ed89d326e39fd0fe # v2.0.0
         with:
           model: glm-4.6:cloud
 
@@ -165,7 +165,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: AI Review
-        uses: ai-action/ollama-action@v1
+        uses: ai-action/ollama-action@be18a6c5c9977cc0510d1d705edd02d574269c93 # v2.0.0
         id: review
         with:
           model: glm-4.6:cloud
@@ -186,7 +186,7 @@ jobs:
           OLLAMA_API_KEY: ${{ secrets.OLLAMA_API_KEY }}
 
       - name: Post Review Comment
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
             const review = `${{ steps.review.outputs.response }}`;

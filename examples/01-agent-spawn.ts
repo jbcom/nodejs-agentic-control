@@ -14,7 +14,7 @@
  * ```
  */
 
-import { Fleet } from 'agentic-control';
+import { Fleet } from '@agentic/control';
 
 /**
  * Main function demonstrating agent spawning workflow

@@ -14,8 +14,8 @@
  * ```
  */
 
-import type { AgentStatus, DiamondConfig, SpawnOptions } from 'agentic-control';
-import { Fleet } from 'agentic-control';
+import type { AgentStatus, DiamondConfig, SpawnOptions } from '@agentic/control';
+import { Fleet } from '@agentic/control';
 
 /**
  * Example: Diamond Pattern Orchestration

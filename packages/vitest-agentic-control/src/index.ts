@@ -1,20 +1,20 @@
 /**
- * Vitest plugin with fixtures and utilities for agentic-control E2E testing.
+ * Vitest plugin with fixtures and utilities for @agentic/control E2E testing.
  *
  * This package provides test utilities and mocking fixtures for building
- * E2E tests with agentic-control components (MCP, providers, sandbox, fleet).
+ * E2E tests with @agentic/control components (MCP, providers, sandbox, fleet).
  *
  * @packageDocumentation
  *
  * @example Installation
  * ```bash
- * pnpm add -D vitest-agentic-control
+ * pnpm add -D vitest-@agentic/control
  * ```
  *
  * @example Basic Usage
  * ```typescript
  * import { describe, it, expect } from 'vitest';
- * import { createMcpMocker, createProviderMocker } from 'vitest-agentic-control';
+ * import { createMcpMocker, createProviderMocker } from 'vitest-@agentic/control';
  *
  * describe('My MCP Tests', () => {
  *   it('should mock MCP server', async () => {
@@ -30,7 +30,7 @@
  *
  * @example Provider Mocking
  * ```typescript
- * import { createProviderMocker } from 'vitest-agentic-control';
+ * import { createProviderMocker } from 'vitest-@agentic/control';
  *
  * const mocker = createProviderMocker();
  * mocker.mockAnthropic({ response: 'Mocked Claude response' });

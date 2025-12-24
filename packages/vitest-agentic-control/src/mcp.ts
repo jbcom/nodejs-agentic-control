@@ -1,5 +1,5 @@
 /**
- * MCP (Model Context Protocol) mocking utilities for agentic-control testing.
+ * MCP (Model Context Protocol) mocking utilities for @agentic/control testing.
  *
  * This module provides utilities for mocking MCP servers, tools, and resources
  * during testing. It allows you to simulate MCP server behavior without
@@ -268,7 +268,7 @@ export class MockMcpServer {
  *
  * @example
  * ```typescript
- * import { McpMocker } from 'vitest-agentic-control';
+ * import { McpMocker } from 'vitest-@agentic/control';
  *
  * const mocker = new McpMocker();
  *

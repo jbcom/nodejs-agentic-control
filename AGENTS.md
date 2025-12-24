@@ -1,15 +1,15 @@
-# Agent Instructions for agentic-control
+# Agent Instructions for @agentic/control
 
 ## Overview
 
 Unified AI agent fleet management with TypeScript core and Python CrewAI companion.
 
-**agentic-control** consumes triage primitives from **[agentic-triage](https://github.com/jbdevprimary/agentic-triage)**.
+**@agentic/control** consumes triage primitives from **[@agentic/triage](https://github.com/jbdevprimary/@agentic/triage)**.
 
-## Using agentic-triage Tools
+## Using @agentic/triage Tools
 
 ```typescript
-import { getTriageTools, getIssueTools, getReviewTools } from 'agentic-triage';
+import { getTriageTools, getIssueTools, getReviewTools } from '@agentic/triage';
 import { generateText } from 'ai';
 
 // In agent configurations
@@ -82,7 +82,7 @@ crew-mcp
 
 ```
 ┌────────────────────────────────────────────────────────────┐
-│                    agentic-control                          │
+│                    @agentic/control                          │
 │                                                             │
 │  ┌─────────────────────────────────────────────────────┐   │
 │  │                   AI Agent Fleet                     │   │
@@ -105,7 +105,7 @@ crew-mcp
                             │
                             ▼
             ┌───────────────────────────────┐
-            │        agentic-triage         │
+            │        @agentic/triage         │
             │  (Triage tool primitives)     │
             └───────────────────────────────┘
 ```
@@ -125,5 +125,5 @@ Use conventional commits:
 
 ## Related
 
-- [agentic-triage](https://github.com/jbdevprimary/agentic-triage) - Triage tool primitives (consumed by this project)
+- [@agentic/triage](https://github.com/jbdevprimary/@agentic/triage) - Triage tool primitives (consumed by this project)
 - [agentic-crew](https://github.com/jbdevprimary/agentic-crew) - Multi-agent orchestration

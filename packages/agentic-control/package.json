@@ -1,5 +1,5 @@
 {
-  "name": "agentic-control",
+  "name": "@agentic/control",
   "version": "1.1.0",
   "description": "Unified AI agent fleet management, triage, and orchestration toolkit for control centers",
   "type": "module",

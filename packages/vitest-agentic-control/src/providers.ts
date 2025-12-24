@@ -1,5 +1,5 @@
 /**
- * AI Provider mocking utilities for agentic-control testing.
+ * AI Provider mocking utilities for @agentic/control testing.
  *
  * This module provides utilities for mocking AI providers (Anthropic, OpenAI,
  * Google, Mistral, Azure, Ollama) during testing. It allows you to simulate
@@ -117,7 +117,7 @@ interface MockModel {
  *
  * @example
  * ```typescript
- * import { ProviderMocker } from 'vitest-agentic-control';
+ * import { ProviderMocker } from 'vitest-@agentic/control';
  *
  * const mocker = new ProviderMocker();
  *

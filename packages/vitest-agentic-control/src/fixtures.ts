@@ -1,8 +1,8 @@
 /**
- * Test fixtures for agentic-control testing.
+ * Test fixtures for @agentic/control testing.
  *
  * This module provides pre-configured test fixtures for common
- * agentic-control configurations, making it easy to set up tests.
+ * @agentic/control configurations, making it easy to set up tests.
  *
  * @module fixtures
  */
@@ -87,7 +87,7 @@ export interface TestConfig {
  *
  * @example
  * ```typescript
- * import { createTestConfig } from 'vitest-agentic-control';
+ * import { createTestConfig } from 'vitest-@agentic/control';
  *
  * const config = createTestConfig({
  *   logLevel: 'debug',
@@ -131,7 +131,7 @@ export function createTestConfig(options: TestConfigOptions = {}): TestConfig {
  *
  * @example
  * ```typescript
- * import { createTokenConfig } from 'vitest-agentic-control';
+ * import { createTokenConfig } from 'vitest-@agentic/control';
  *
  * const tokens = createTokenConfig({
  *   organizations: {
@@ -165,7 +165,7 @@ export function createTokenConfig(overrides: Partial<TestTokenConfig> = {}): Tes
  *
  * @example
  * ```typescript
- * import { createFleetConfig } from 'vitest-agentic-control';
+ * import { createFleetConfig } from 'vitest-@agentic/control';
  *
  * const fleet = createFleetConfig({
  *   concurrency: 5,
@@ -189,7 +189,7 @@ export function createFleetConfig(overrides: Partial<TestFleetConfig> = {}): Tes
  *
  * @example
  * ```typescript
- * import { createTriageConfig } from 'vitest-agentic-control';
+ * import { createTriageConfig } from 'vitest-@agentic/control';
  *
  * const triage = createTriageConfig({
  *   provider: 'openai',
@@ -214,7 +214,7 @@ export function createTriageConfig(overrides: Partial<TestTriageConfig> = {}): T
  *
  * @example
  * ```typescript
- * import { createSandboxConfig } from 'vitest-agentic-control';
+ * import { createSandboxConfig } from 'vitest-@agentic/control';
  *
  * const sandbox = createSandboxConfig({
  *   runtime: 'cursor',
@@ -272,7 +272,7 @@ export const DEFAULT_TEST_ENV: TestEnvSetup = {
  *
  * @example
  * ```typescript
- * import { withTestEnv, DEFAULT_TEST_ENV } from 'vitest-agentic-control';
+ * import { withTestEnv, DEFAULT_TEST_ENV } from 'vitest-@agentic/control';
  * import { beforeEach, afterEach } from 'vitest';
  *
  * describe('My Tests', () => {
