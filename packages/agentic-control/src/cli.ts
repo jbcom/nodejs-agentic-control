@@ -770,9 +770,15 @@ triageCmd
         process.exit(1);
       }
 
+      const token = getTokenForRepo(repo);
+      if (!token) {
+        console.error(`❌ Token not found for repository "${repo}". Check your configuration or GITHUB_TOKEN environment variable.`);
+        process.exit(1);
+      }
+
       const triage = new Triage({
         github: {
-          token: process.env.GH_TOKEN || process.env.GITHUB_TOKEN || '',
+          token,
           repo,
         },
         resolver: {
@@ -812,9 +818,15 @@ triageCmd
         process.exit(1);
       }
 
+      const token = getTokenForRepo(repo);
+      if (!token) {
+        console.error(`❌ Token not found for repository "${repo}". Check your configuration or GITHUB_TOKEN environment variable.`);
+        process.exit(1);
+      }
+
       const triage = new Triage({
         github: {
-          token: process.env.GH_TOKEN || process.env.GITHUB_TOKEN || '',
+          token,
           repo,
         },
         resolver: {

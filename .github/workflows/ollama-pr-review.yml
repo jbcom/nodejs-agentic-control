@@ -57,7 +57,7 @@ jobs:
           fi
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
@@ -193,7 +193,7 @@ jobs:
 
       - name: Commit fixes
         if: steps.review.outputs.auto_apply == 'true'
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@8621497c8c397917bd60b8900174ee605e0ae42b # v5.0.1
         with:
           commit_message: "fix: auto-apply safe improvements (Ollama)"
           branch: ${{ github.head_ref }}
@@ -202,36 +202,26 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          SUMMARY=$(jq -r '.summary' /tmp/review.json)
-          SCORE=$(jq -r '.score' /tmp/review.json)
-          REC=$(jq -r '.recommendation' /tmp/review.json)
-          ISSUES=$(jq '.issues | length' /tmp/review.json)
+          # Use jq to build the JSON body safely
+          jq -n \
+            --rawfile review /tmp/review.json \
+            --arg repo "${{ github.repository }}" \
+            --arg pr "${{ github.event.pull_request.number }}" \
+            '{
+              body: ("## 🤖 Ollama Code Review\n\n**Summary:** " + (try ($review | fromjson | .summary) catch "Analysis failed") + "\n\n| Score | Issues | Recommendation |\n|-------|--------|----------------|\n| " + (try (($review | fromjson | .score | toString) + "/10") catch "N/A") + " | " + (try ($review | fromjson | .issues | length | toString) catch "0") + " | " + (try ($review | fromjson | .recommendation) catch "comment") + " |\n\n<details>\n<summary>Details</summary>\n\n```json\n" + $review + "\n```\n</details>"),
+              event: (try (
+                ($review | fromjson | .recommendation) as $rec |
+                if $rec == "approve" then "APPROVE"
+                elif $rec == "request_changes" then "REQUEST_CHANGES"
+                else "COMMENT" end
+              ) catch "COMMENT")
+            }' > /tmp/review_payload.json
           
-          BODY="## 🤖 Ollama Code Review
-
-          **Summary:** $SUMMARY
-
-          | Score | Issues | Recommendation |
-          |-------|--------|----------------|
-          | $SCORE/10 | $ISSUES | $REC |
-
-          <details>
-          <summary>Details</summary>
-
-          \`\`\`json
-          $(cat /tmp/review.json)
-          \`\`\`
-          </details>"
-          
-          EVENT="COMMENT"
-          [[ "$REC" == "approve" ]] && EVENT="APPROVE"
-          [[ "$REC" == "request_changes" ]] && EVENT="REQUEST_CHANGES"
-          
-          gh api repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/reviews \
-            -f body="$BODY" -f event="$EVENT" || gh pr comment ${{ github.event.pull_request.number }} --body "$BODY"
+          gh api "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/reviews" \
+            --input /tmp/review_payload.json || gh pr comment ${{ github.event.pull_request.number }} --body-file /tmp/review.json
 
       - name: Upload review artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@65c4c4a1d41e44a37fedf1b632902d1b447526dd # v4.6.0
         with:
           name: ollama-review
           path: /tmp/review.json
@@ -249,7 +239,7 @@ jobs:
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
@@ -262,7 +252,7 @@ jobs:
         run: git checkout "$HEAD_REF"
 
       - name: Download review artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@fa0b910235d5812e3796d539ec110196866037a1 # v4.1.8
         with:
           name: ollama-review
           path: /tmp
@@ -384,7 +374,7 @@ jobs:
 
       - name: Commit fixes
         if: steps.resolve.outputs.fix_count != '0'
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@8621497c8c397917bd60b8900174ee605e0ae42b # v5.0.1
         with:
           commit_message: "fix: self-resolve review issues (Ollama)"
           branch: ${{ github.head_ref }}
@@ -397,26 +387,15 @@ jobs:
           FIX_COUNT: ${{ steps.resolve.outputs.fix_count }}
           ACK_COUNT: ${{ steps.resolve.outputs.ack_count }}
         run: |
-          SUMMARY=$(jq -r '.summary' /tmp/resolutions.json)
+          jq -n \
+            --rawfile resolutions /tmp/resolutions.json \
+            --arg fixes "$FIX_COUNT" \
+            --arg acks "$ACK_COUNT" \
+            '{
+              body: ("## 🔄 Self-Resolution Complete\n\n" + (try ($resolutions | fromjson | .summary) catch "Analysis complete") + "\n\n| Resolution | Count |\n|------------|-------|\n| Fixes Applied | " + $fixes + " |\n| Acknowledged (Intentional) | " + $acks + " |\n\n<details>\n<summary>Details</summary>\n\n```json\n" + $resolutions + "\n```\n</details>")
+            }' > /tmp/summary_payload.json
           
-          BODY="## 🔄 Self-Resolution Complete
-
-          $SUMMARY
-
-          | Resolution | Count |
-          |------------|-------|
-          | Fixes Applied | $FIX_COUNT |
-          | Acknowledged (Intentional) | $ACK_COUNT |
-
-          <details>
-          <summary>Details</summary>
-
-          \`\`\`json
-          $(cat /tmp/resolutions.json)
-          \`\`\`
-          </details>"
-          
-          gh pr comment "$PR_NUMBER" --body "$BODY"
+          gh api "repos/${{ github.repository }}/issues/$PR_NUMBER/comments" --input /tmp/summary_payload.json
           
           # If all resolved, dismiss ALL our blocking reviews
           if [[ "$RESOLVED" == "true" ]]; then
@@ -447,7 +426,7 @@ jobs:
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
@@ -572,25 +551,15 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          FIX_COUNT=${{ steps.alerts.outputs.fix_count }}
-          APPLIED=${{ steps.apply.outputs.applied_count || '0' }}
+          jq -n \
+            --rawfile decisions /tmp/decisions.json \
+            --arg available "${{ steps.alerts.outputs.fix_count }}" \
+            --arg applied "${{ steps.apply.outputs.applied_count || '0' }}" \
+            '{
+              body: ("## 🔧 Copilot Autofix Evaluation\n\n| Metric | Count |\n|--------|-------|\n| Autofixes Available | " + $available + " |\n| Autofixes Applied | " + $applied + " |\n\n<details>\n<summary>Evaluation Details</summary>\n\n```json\n" + $decisions + "\n```\n</details>")
+            }' > /tmp/autofix_payload.json
           
-          BODY="## 🔧 Copilot Autofix Evaluation
-
-          | Metric | Count |
-          |--------|-------|
-          | Autofixes Available | $FIX_COUNT |
-          | Autofixes Applied | $APPLIED |
-
-          <details>
-          <summary>Evaluation Details</summary>
-
-          \`\`\`json
-          $(cat /tmp/decisions.json 2>/dev/null || echo '{}')
-          \`\`\`
-          </details>"
-          
-          gh pr comment ${{ github.event.pull_request.number }} --body "$BODY"
+          gh api "repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments" --input /tmp/autofix_payload.json
 
   # ============================================
   # Monitor AI Feedback - Triggered on any comment/review
@@ -620,7 +589,7 @@ jobs:
           fi
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
           # Use CI_GITHUB_TOKEN to allow commits to trigger workflows
@@ -797,7 +766,7 @@ jobs:
           done
 
       - name: Commit fixes
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@8621497c8c397917bd60b8900174ee605e0ae42b # v5.0.1
         with:
           commit_message: "fix: resolve AI feedback (automated)"
           branch: ${{ steps.pr.outputs.head_ref }}
@@ -807,28 +776,15 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          SUMMARY=$(jq -r '.summary' /tmp/fixes.json)
-          FIX_COUNT=$(jq '[.fixes[] | select(.action == "fix")] | length' /tmp/fixes.json)
-          ACK_COUNT=$(jq '[.fixes[] | select(.action == "acknowledge")] | length' /tmp/fixes.json)
+          jq -n \
+            --rawfile fixes /tmp/fixes.json \
+            --arg fix_count "$(jq '[.fixes[] | select(.action == "fix")] | length' /tmp/fixes.json)" \
+            --arg ack_count "$(jq '[.fixes[] | select(.action == "acknowledge")] | length' /tmp/fixes.json)" \
+            '{
+              body: ("## 🔄 AI Feedback Resolution\n\n" + (try ($fixes | fromjson | .summary) catch "Resolution complete") + "\n\n| Action | Count |\n|--------|-------|\n| Fixes Applied | " + $fix_count + " |\n| Acknowledged | " + $ack_count + " |\n\n<details>\n<summary>Details</summary>\n\n```json\n" + $fixes + "\n```\n</details>")
+            }' > /tmp/ai_feedback_payload.json
           
-          BODY="## 🔄 AI Feedback Resolution
-
-          $SUMMARY
-
-          | Action | Count |
-          |--------|-------|
-          | Fixes Applied | $FIX_COUNT |
-          | Acknowledged | $ACK_COUNT |
-
-          <details>
-          <summary>Details</summary>
-
-          \`\`\`json
-          $(cat /tmp/fixes.json)
-          \`\`\`
-          </details>"
-          
-          gh pr comment ${{ steps.pr.outputs.number }} --body "$BODY"
+          gh api "repos/${{ github.repository }}/issues/${{ steps.pr.outputs.number }}/comments" --input /tmp/ai_feedback_payload.json
 
   # ============================================
   # Check if Ready to Merge

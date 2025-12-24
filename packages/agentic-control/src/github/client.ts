@@ -724,7 +724,7 @@ export function cloneRepo(repoUrl: string, destPath: string): Result<void> {
     cloneUrl = `https://oauth2:${token}@github.com/${org}/${repoName}.git`;
   }
 
-  const proc = spawnSync('git', ['clone', cloneUrl, destPath], {
+  const proc = spawnSync('git', ['clone', '--', cloneUrl, destPath], {
     encoding: 'utf-8',
     stdio: 'pipe',
     timeout: 120000,
