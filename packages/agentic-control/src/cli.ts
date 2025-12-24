@@ -458,7 +458,7 @@ fleetCmd
 
       if (opts.json) {
         output(result.data, true);
-      } else {
+      } else if (result.data) {
         const s = result.data;
         console.log('=== Fleet Summary ===\n');
         if (s && !Array.isArray(s)) {

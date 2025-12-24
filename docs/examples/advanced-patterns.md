@@ -150,6 +150,14 @@ export AZURE_OPENAI_API_VERSION="2024-02-15-preview"
       "enabled": true,
       "mode": "proxy",
       "proxyUrl": "http://localhost:3000"
+    },
+    "21st-magic": {
+      "enabled": true,
+      "command": "npx",
+      "args": ["-y", "@21st-dev/magic-mcp@latest"],
+      "env": {
+        "TWENTY_FIRST_API_KEY": "${TWENTY_FIRST_API_KEY}"
+      }
     }
   }
 }

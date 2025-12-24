@@ -79,6 +79,8 @@ export interface MCPConfig {
   github?: MCPServerConfig;
   /** Context7 documentation MCP */
   context7?: MCPServerConfig;
+  /** 21st.dev Magic MCP */
+  '21st-magic'?: MCPServerConfig;
   /** Custom MCP servers */
   [key: string]: MCPServerConfig | undefined;
 }

@@ -39,6 +39,14 @@ const DEFAULT_MCP_CONFIG: MCPConfig = {
     command: 'npx',
     args: ['-y', '@anthropic/context7-mcp'],
   },
+  '21st-magic': {
+    enabled: true,
+    tokenEnvVar: 'TWENTY_FIRST_API_KEY',
+    tokenEnvVarFallbacks: ['COPILOT_MCP_TWENTY_FIRST_API_KEY'],
+    mode: 'stdio',
+    command: 'npx',
+    args: ['-y', '@21st-dev/magic-mcp@latest'],
+  },
 };
 
 // ─────────────────────────────────────────────────────────────────
@@ -134,6 +142,7 @@ export interface MCPClientConfig {
   cursor?: Partial<MCPServerConfig> & { apiKey?: string };
   github?: Partial<MCPServerConfig> & { token?: string };
   context7?: Partial<MCPServerConfig> & { apiKey?: string };
+  '21st-magic'?: Partial<MCPServerConfig> & { apiKey?: string };
 }
 
 export interface MCPClients {
@@ -167,7 +176,7 @@ export async function initializeMCPClients(overrides: MCPClientConfig = {}): Pro
       if ('token' in override && override.token) token = override.token;
     }
 
-    if (!token && name !== 'context7') {
+    if (!token && name !== 'context7' && name !== '21st-magic') {
       // Skip non-optional servers without tokens
       continue;
     }
@@ -181,6 +190,7 @@ export async function initializeMCPClients(overrides: MCPClientConfig = {}): Pro
           if (name === 'cursor') env.CURSOR_API_KEY = token;
           if (name === 'github') env.GITHUB_TOKEN = token;
           if (name === 'context7') env.CONTEXT7_API_KEY = token;
+          if (name === '21st-magic') env.TWENTY_FIRST_API_KEY = token;
         }
 
         clients[name] = await createMCPClient({
