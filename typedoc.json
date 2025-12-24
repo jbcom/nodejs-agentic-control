@@ -6,6 +6,7 @@
     "./packages/vitest-agentic-control/src/index.ts"
   ],
   "entryPointStrategy": "expand",
+  "tsconfig": "./packages/agentic-control/tsconfig.json",
   "out": "./docs/_build/api",
   "theme": "default",
   "readme": "./README.md",

@@ -202,6 +202,9 @@ export class SandboxMocker {
       name: config.name ?? `mock-container-${this.containerIdCounter}`,
     };
 
+    // At this point, id is guaranteed to be defined
+    const containerId = mergedConfig.id as string;
+
     const container: MockContainer = {
       config: mergedConfig,
       status: 'created',
@@ -232,7 +235,7 @@ export class SandboxMocker {
 
       remove: vi.fn(async () => {
         container.status = 'removed';
-        this.containers.delete(mergedConfig.id!);
+        this.containers.delete(containerId);
       }),
 
       copyTo: vi.fn(async () => {
@@ -244,7 +247,7 @@ export class SandboxMocker {
       }),
     };
 
-    this.containers.set(mergedConfig.id!, container);
+    this.containers.set(containerId, container);
     return container;
   }
 

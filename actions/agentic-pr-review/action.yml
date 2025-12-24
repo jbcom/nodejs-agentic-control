@@ -1,49 +1,43 @@
 name: 'Agentic PR Review'
-description: 'AI-powered code review and feedback for Pull Requests'
-author: 'Jon Bogaty'
-branding:
-  icon: 'search'
-  color: 'blue'
+description: 'Review a pull request using an AI agent.'
+author: 'jbcom/agentic-control'
 
 inputs:
   github_token:
-    description: 'GitHub token for API access'
+    description: 'The GitHub token to use for authentication.'
     required: true
   model:
-    description: 'AI model to use for review'
+    description: 'The Ollama model to use for the review.'
     required: false
-  base:
-    description: 'Base ref for diff'
+    default: 'llama3'
+  api_key:
+    description: 'The API key for the model.'
     required: false
-    default: 'main'
-  head:
-    description: 'Head ref for diff'
-    required: false
-    default: 'HEAD'
+
+outputs:
+  review_summary:
+    description: 'A summary of the review.'
+
+branding:
+  icon: 'git-pull-request'
+  color: 'purple'
 
 runs:
   using: 'composite'
   steps:
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
+    - name: 'Checkout code'
+      uses: actions/checkout@v4
       with:
-        node-version: '22'
+        fetch-depth: 0
 
-    - name: Run PR Review
+    - name: 'Install dependencies'
       shell: bash
-      env:
-        GH_TOKEN: ${{ inputs.github_token }}
-        GITHUB_TOKEN: ${{ inputs.github_token }}
+      run: pnpm install --frozen-lockfile
+
+    - name: 'Run PR review'
+      shell: bash
       run: |
-        ARGS=""
-        if [ -n "${{ inputs.model }}" ]; then
-          ARGS="$ARGS --model ${{ inputs.model }}"
-        fi
-        if [ -n "${{ inputs.base }}" ]; then
-          ARGS="$ARGS --base ${{ inputs.base }}"
-        fi
-        if [ -n "${{ inputs.head }}" ]; then
-          ARGS="$ARGS --head ${{ inputs.head }}"
-        fi
-        
-        npx @agentic/control triage review $ARGS
+        pnpm exec agentic-control pr-review \
+          --model "${{ inputs.model }}" \
+          --api-key "${{ inputs.api_key }}" \
+          --github-token "${{ inputs.github_token }}"

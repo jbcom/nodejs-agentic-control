@@ -1,34 +1,45 @@
 name: 'Agentic Orchestrator'
-description: 'AI agent fleet orchestration and coordination'
-author: 'Jon Bogaty'
-branding:
-  icon: 'command'
-  color: 'purple'
+description: 'Run a full multi-agent orchestration.'
+author: 'jbcom/agentic-control'
 
 inputs:
   github_token:
-    description: 'GitHub token for API access'
+    description: 'The GitHub token to use for authentication.'
     required: true
-  command:
-    description: 'Orchestration command (list, status, coordinate, summary)'
+  config_path:
+    description: 'The path to the orchestration configuration file.'
+    required: true
+  model:
+    description: 'The default Ollama model to use for the orchestration.'
     required: false
-    default: 'summary'
-  args:
-    description: 'Additional arguments for the command'
+    default: 'llama3'
+  api_key:
+    description: 'The API key for the model.'
     required: false
+
+outputs:
+  orchestration_summary:
+    description: 'A summary of the orchestration.'
+
+branding:
+  icon: 'cpu'
+  color: 'blue'
 
 runs:
   using: 'composite'
   steps:
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '22'
+    - name: 'Checkout code'
+      uses: actions/checkout@v4
 
-    - name: Run Orchestrator
+    - name: 'Install dependencies'
       shell: bash
-      env:
-        GH_TOKEN: ${{ inputs.github_token }}
-        GITHUB_TOKEN: ${{ inputs.github_token }}
+      run: pnpm install --frozen-lockfile
+
+    - name: 'Run orchestrator'
+      shell: bash
       run: |
-        npx @agentic/control fleet ${{ inputs.command }} ${{ inputs.args }}
+        pnpm exec agentic-control orchestrate \
+          --config "${{ inputs.config_path }}" \
+          --model "${{ inputs.model }}" \
+          --api-key "${{ inputs.api_key }}" \
+          --github-token "${{ inputs.github_token }}"

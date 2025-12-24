@@ -1,0 +1,20 @@
+name: 'Orchestrator Example'
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  orchestrator:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout code'
+        uses: actions/checkout@v4
+
+      - name: 'Run Agentic Orchestrator'
+        uses: jbcom/agentic-control/actions/agentic-orchestrator@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          config_path: '.github/workflows/orchestrator-config.yml'
+          model: 'llama3'

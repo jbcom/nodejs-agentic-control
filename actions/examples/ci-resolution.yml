@@ -1,0 +1,15 @@
+name: 'CI Resolution Example'
+
+on:
+  status:
+
+jobs:
+  ci_resolution:
+    runs-on: ubuntu-latest
+    if: "github.event.state == 'failure'"
+    steps:
+      - name: 'Run Agentic CI Resolution'
+        uses: jbcom/agentic-control/actions/agentic-ci-resolution@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          model: 'llama3'
