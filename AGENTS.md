@@ -127,3 +127,41 @@ Use conventional commits:
 
 - [agentic-triage](https://github.com/jbdevprimary/agentic-triage) - Triage tool primitives (consumed by this project)
 - [agentic-crew](https://github.com/jbdevprimary/agentic-crew) - Multi-agent orchestration
+
+## Provider Implementations (NEW)
+
+### @agentic/providers Package
+
+Provider implementations for @agentic/triage primitives:
+
+| Provider | File | Cost | Use Case |
+|----------|------|------|----------|
+| Ollama | `ollama.ts` | Free | Trivial/simple tasks |
+| Jules | `jules.ts` | Free tier | Complex async tasks |
+| Cursor | `cursor.ts` | $$$ | Expert-level, last resort |
+
+```typescript
+import { createOllamaAgent, createJulesAgent } from '@agentic/providers';
+
+const registry = new AgentRegistry()
+  .register(createOllamaAgent('ollama', { url: 'http://localhost:11434' }))
+  .register(createJulesAgent('jules', { apiKey: process.env.JULES_API_KEY }));
+```
+
+### Merge Queue Action
+
+Cross-organization merge queue via GitHub Issue:
+
+```yaml
+- uses: agentic-dev-library/control/actions/merge-queue@v1
+  with:
+    command: process  # add, remove, process, refresh, status
+    queue-repo: my-org/control-center
+    github-token: ${{ secrets.CROSS_ORG_TOKEN }}
+```
+
+Features:
+- Priority-based ordering
+- Cross-organization support
+- No Team subscription required
+- Observable state via GitHub Issue
