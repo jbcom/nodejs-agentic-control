@@ -10,7 +10,12 @@ async function getStats(packageName: string) {
     if (!response.ok) {
       throw new Error(`Failed to fetch stats for ${packageName}: ${response.statusText}`);
     }
-    const data = await response.json() as { downloads: number; start: string; end: string; package: string };
+    const data = (await response.json()) as {
+      downloads: number;
+      start: string;
+      end: string;
+      package: string;
+    };
     return data;
   } catch (error) {
     console.error(`Error fetching stats for ${packageName}:`, error);
@@ -24,7 +29,11 @@ async function getRegistryData(packageName: string) {
     if (!response.ok) {
       throw new Error(`Failed to fetch registry data for ${packageName}: ${response.statusText}`);
     }
-    const data = await response.json() as any;
+    const data = (await response.json()) as {
+      'dist-tags': { latest: string };
+      license: string;
+      time: { modified: string };
+    };
     return {
       version: data['dist-tags'].latest,
       license: data.license,

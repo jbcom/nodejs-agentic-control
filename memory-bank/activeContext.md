@@ -25,7 +25,8 @@ The project is a pnpm workspace monorepo:
 - **Standardized Naming**: All package references updated to use `agentic-control` (unscoped) to match the published npm package.
 - **Automated Version Sync**: Added `scripts/sync-versions.ts` and `@semantic-release/exec` to ensure workspace packages stay in sync with the root version during release.
 - **NPM Monitoring**: New `pnpm run monitor:npm` command and `.github/workflows/monitor.yml` for daily health and download tracking.
-- **CI/CD Fixes**: Resolved TypeScript build error in `cli.ts` that was blocking releases.
+- **CI/CD Fixes**: Resolved TypeScript build error in `cli.ts` and fixed Biome linting/formatting issues across the monorepo to ensure CI passes.
+- **Verification**: Verified full build, lint (Biome), typecheck, and all 82 tests pass locally.
 
 ### Test Status
 
@@ -63,3 +64,4 @@ pnpm tsx scripts/sync-versions.ts
 
 ---
 *Release maintenance & monitoring implemented: 2025-12-24*
+## Session: 2025-12-24

@@ -13,7 +13,13 @@ import { existsSync, writeFileSync } from 'node:fs';
 import { Command, InvalidArgumentError, Option } from 'commander';
 import { getConfig, getDefaultModel, getFleetDefaults, initConfig } from './core/config.js';
 import { safeGitCommand } from './core/subprocess.js';
-import { extractOrg, getConfiguredOrgs, getTokenForRepo, getTokenSummary, validateTokens } from './core/tokens.js';
+import {
+  extractOrg,
+  getConfiguredOrgs,
+  getTokenForRepo,
+  getTokenSummary,
+  validateTokens,
+} from './core/tokens.js';
 import type { Agent, Result } from './core/types.js';
 import { Fleet } from './fleet/index.js';
 import { HandoffManager } from './handoff/index.js';
@@ -776,7 +782,9 @@ triageCmd
 
       const token = getTokenForRepo(repo);
       if (!token) {
-        console.error(`❌ Token not found for repository "${repo}". Check your configuration or GITHUB_TOKEN environment variable.`);
+        console.error(
+          `❌ Token not found for repository "${repo}". Check your configuration or GITHUB_TOKEN environment variable.`
+        );
         process.exit(1);
       }
 
@@ -823,7 +831,9 @@ triageCmd
 
       const token = getTokenForRepo(repo);
       if (!token) {
-        console.error(`❌ Token not found for repository "${repo}". Check your configuration or GITHUB_TOKEN environment variable.`);
+        console.error(
+          `❌ Token not found for repository "${repo}". Check your configuration or GITHUB_TOKEN environment variable.`
+        );
         process.exit(1);
       }
 
@@ -856,7 +866,9 @@ triageCmd
       if (result.allActions.length > 0) {
         console.log(`\nActions Taken (${result.allActions.length}):`);
         for (const action of result.allActions) {
-          console.log(`- [${action.success ? '✅' : '❌'}] ${action.action}: ${action.description}`);
+          console.log(
+            `- [${action.success ? '✅' : '❌'}] ${action.action}: ${action.description}`
+          );
         }
       }
 
