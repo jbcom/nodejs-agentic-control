@@ -1,0 +1,39 @@
+{
+  "name": "@agentic/providers",
+  "version": "0.1.0",
+  "description": "LLM and agent provider implementations for @agentic/triage",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./ollama": {
+      "types": "./dist/ollama.d.ts",
+      "import": "./dist/ollama.js"
+    },
+    "./jules": {
+      "types": "./dist/jules.d.ts", 
+      "import": "./dist/jules.js"
+    },
+    "./cursor": {
+      "types": "./dist/cursor.d.ts",
+      "import": "./dist/cursor.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@agentic/triage": "workspace:*"
+  },
+  "peerDependencies": {
+    "@agentic/triage": ">=0.2.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  }
+}

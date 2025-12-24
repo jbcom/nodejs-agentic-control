@@ -1,0 +1,54 @@
+name: 'Agentic Merge Queue'
+description: 'Cross-organization merge queue using GitHub Issue as state store'
+author: 'jbcom'
+
+branding:
+  icon: 'git-merge'
+  color: 'purple'
+
+inputs:
+  command:
+    description: 'Command to execute: add, remove, process, refresh, status'
+    required: true
+  pr:
+    description: 'PR identifier (org/repo#number) for add/remove commands'
+    required: false
+  priority:
+    description: 'Priority level (1=critical, 2=normal, 3=low)'
+    required: false
+    default: '2'
+  queue-repo:
+    description: 'Repository containing the queue issue (default: current repo)'
+    required: false
+  queue-issue:
+    description: 'Issue number or "auto" to find/create'
+    required: false
+    default: 'auto'
+  github-token:
+    description: 'GitHub token with repo and issues scope'
+    required: true
+  ollama-url:
+    description: 'Ollama API URL for complexity evaluation'
+    required: false
+  jules-api-key:
+    description: 'Jules API key for complex tasks'
+    required: false
+  cursor-api-key:
+    description: 'Cursor API key (expensive, disabled by default)'
+    required: false
+  cursor-enabled:
+    description: 'Enable Cursor Cloud Agents (default: false)'
+    required: false
+    default: 'false'
+
+outputs:
+  queue-length:
+    description: 'Number of items in queue'
+  processed:
+    description: 'Number of items processed (for process command)'
+  result:
+    description: 'JSON result of the operation'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
