@@ -1,69 +1,234 @@
-# Copilot Instructions
+# TypeScript/Node.js Copilot Instructions
 
-> **Repository-specific instructions should be in `.github/copilot-instructions-local.md`**
-> This file provides common patterns. Local instructions take precedence.
+## Environment Setup
 
-## Before Starting Any Task
+### Package Manager: pnpm (preferred)
+```bash
+# Install pnpm if not present
+npm install -g pnpm
 
-1. **Read the issue/PR description completely**
-2. **Check for existing patterns** in the codebase before creating new ones
-3. **Run the test suite** before and after changes
-4. **Follow the repository's established conventions**
-
-## Code Quality Requirements
-
-### All Changes Must:
-- [ ] Pass linting (`npm run lint` / `uv run ruff check`)
-- [ ] Pass tests (`npm test` / `uv run pytest`)
-- [ ] Include tests for new functionality
-- [ ] Follow existing code style and patterns
-- [ ] Have clear, descriptive commit messages
-
-### Commit Message Format
-```
-<type>(<scope>): <description>
-
-Types: feat, fix, docs, style, refactor, test, chore
+# Install dependencies
+pnpm install
 ```
 
-## Common Patterns
+### Node Version
+Check `.nvmrc` or `package.json` engines field for required version.
+```bash
+nvm use  # If .nvmrc exists
+```
+
+## Development Commands
+
+### Testing (ALWAYS run tests)
+```bash
+# Run all tests
+pnpm test
+
+# Run tests in watch mode
+pnpm test:watch
+
+# Run with coverage
+pnpm test:coverage
+
+# Run specific test file
+pnpm test -- src/__tests__/specific.test.ts
+
+# Run tests matching pattern
+pnpm test -- -t "pattern"
+```
+
+### Linting & Formatting
+```bash
+# Lint (ESLint or Biome)
+pnpm lint
+
+# Fix lint issues
+pnpm lint:fix
+
+# Format (Prettier or Biome)
+pnpm format
+
+# Check formatting
+pnpm format:check
+
+# Type checking
+pnpm typecheck
+```
+
+### Building
+```bash
+# Build for production
+pnpm build
+
+# Build in watch mode
+pnpm build:watch
+
+# Clean build artifacts
+pnpm clean
+```
+
+## Code Patterns
+
+### Imports
+```typescript
+// Node built-ins first
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
+
+// External packages
+import { z } from 'zod';
+
+// Internal absolute imports
+import { config } from '@/config';
+import { logger } from '@/utils/logger';
+
+// Relative imports last
+import { helper } from './helper';
+```
+
+### Type Definitions
+```typescript
+// Prefer interfaces for object shapes
+interface UserConfig {
+  readonly id: string;
+  name: string;
+  settings?: Settings;
+}
+
+// Use type for unions/intersections
+type Result<T> = Success<T> | Failure;
+
+// Export types explicitly
+export type { UserConfig, Result };
+```
 
 ### Error Handling
-- Always handle errors explicitly
-- Log errors with context
-- Throw typed errors when possible
+```typescript
+// Custom error classes
+class ProcessingError extends Error {
+  constructor(
+    message: string,
+    public readonly code: string,
+    public readonly cause?: Error
+  ) {
+    super(message);
+    this.name = 'ProcessingError';
+  }
+}
 
-### Testing
-- Write tests FIRST when fixing bugs (TDD)
-- Test edge cases, not just happy paths
-- Mock external dependencies
+// Result pattern (alternative to exceptions)
+type Result<T, E = Error> = 
+  | { success: true; data: T }
+  | { success: false; error: E };
+```
 
-### Documentation
-- Update README if adding features
-- Add JSDoc/docstrings to public APIs
-- Include usage examples
+### Async Patterns
+```typescript
+// Prefer async/await over .then()
+async function fetchData(url: string): Promise<Data> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new FetchError(`HTTP ${response.status}`);
+  }
+  return response.json();
+}
 
-## Issue Resolution Workflow
+// Use Promise.all for parallel operations
+const [users, posts] = await Promise.all([
+  fetchUsers(),
+  fetchPosts(),
+]);
+```
 
-1. **Understand**: Read issue, check related code
-2. **Reproduce**: If bug, write failing test first
-3. **Implement**: Make minimal changes to fix/add feature
-4. **Test**: Ensure all tests pass
-5. **Document**: Update docs if needed
-6. **Commit**: Clear message referencing issue
+### Testing Patterns
+```typescript
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-## What NOT To Do
+describe('Processor', () => {
+  let processor: Processor;
 
-- ❌ Don't refactor unrelated code
-- ❌ Don't add dependencies without justification
-- ❌ Don't skip tests
-- ❌ Don't change formatting of untouched code
-- ❌ Don't make breaking changes without discussion
+  beforeEach(() => {
+    processor = new Processor({ debug: false });
+  });
 
-## Getting Help
+  it('should process valid input', async () => {
+    const result = await processor.process('valid');
+    expect(result.success).toBe(true);
+  });
 
-If blocked:
-1. Check `memory-bank/` for project context
-2. Check `docs/` for architecture decisions
-3. Look at recent PRs for patterns
-4. Ask in the issue for clarification
+  it('should throw on invalid input', async () => {
+    await expect(processor.process('')).rejects.toThrow('Invalid');
+  });
+
+  it('should call external service', async () => {
+    const mockService = vi.fn().mockResolvedValue({ data: 'test' });
+    // ...
+  });
+});
+```
+
+### React Patterns (if applicable)
+```typescript
+// Functional components with proper typing
+interface ButtonProps {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+}
+
+export function Button({ label, onClick, disabled = false }: ButtonProps) {
+  return (
+    <button onClick={onClick} disabled={disabled}>
+      {label}
+    </button>
+  );
+}
+
+// Hooks
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  // ...
+  return debouncedValue;
+}
+```
+
+## Common Issues
+
+### "Cannot find module"
+```bash
+# Rebuild TypeScript
+pnpm build
+
+# Check tsconfig.json paths
+```
+
+### Type errors after package update
+```bash
+# Regenerate types
+pnpm install
+pnpm typecheck
+```
+
+### ESM vs CommonJS issues
+```typescript
+// In ESM (type: "module" in package.json)
+import { something } from './module.js';  // .js extension required
+
+// For JSON imports
+import config from './config.json' with { type: 'json' };
+```
+
+## File Structure
+```
+src/
+├── index.ts           # Main entry point
+├── core/              # Core logic (no framework deps)
+├── components/        # React components (if applicable)
+├── hooks/             # React hooks
+├── utils/             # Utility functions
+├── types/             # Type definitions
+└── __tests__/         # Unit tests
+tests/
+├── integration/       # Integration tests
+└── e2e/              # End-to-end tests
+```
