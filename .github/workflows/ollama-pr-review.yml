@@ -60,9 +60,8 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
           # Use CI_GITHUB_TOKEN to allow commits to trigger workflows
-          token: ${{ secrets.CI_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get PR diff
         env:
@@ -242,9 +241,8 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
           # Use CI_GITHUB_TOKEN to allow commits to trigger workflows
-          token: ${{ secrets.CI_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout PR branch
         env:
@@ -430,7 +428,7 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
-          token: ${{ secrets.CI_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout PR branch
         env:
@@ -593,7 +591,7 @@ jobs:
         with:
           fetch-depth: 0
           # Use CI_GITHUB_TOKEN to allow commits to trigger workflows
-          token: ${{ secrets.CI_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get PR number
         id: pr
