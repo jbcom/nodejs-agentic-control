@@ -75,7 +75,9 @@ RUN mkdir -p "$PNPM_HOME" && echo "pnpm directory created successfully"
 # Copy package files for dependency installation
 COPY --chown=agent:agent package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY --chown=agent:agent packages/agentic-control/package.json ./packages/agentic-control/
+COPY --chown=agent:agent packages/providers/package.json ./packages/providers/
 COPY --chown=agent:agent packages/vitest-agentic-control/package.json ./packages/vitest-agentic-control/
+COPY --chown=agent:agent scripts/ ./scripts/
 
 # Install all dependencies (including devDependencies for AI SDK providers)
 # Note: devDependencies include @ai-sdk/anthropic which is needed at runtime

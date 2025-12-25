@@ -47,6 +47,7 @@ const MCPConfigSchema = z
     cursor: MCPServerConfigSchema.optional(),
     github: MCPServerConfigSchema.optional(),
     context7: MCPServerConfigSchema.optional(),
+    '21st-magic': MCPServerConfigSchema.optional(),
   })
   .catchall(MCPServerConfigSchema);
 

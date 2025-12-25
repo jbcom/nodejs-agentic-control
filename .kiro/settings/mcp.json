@@ -15,6 +15,15 @@
       "env": {},
       "disabled": false,
       "autoApprove": []
+    },
+    "21st-magic": {
+      "command": "npx",
+      "args": ["-y", "@21st-dev/magic-mcp@latest"],
+      "env": {
+        "TWENTY_FIRST_API_KEY": "${TWENTY_FIRST_API_KEY}"
+      },
+      "disabled": false,
+      "autoApprove": []
     }
   }
 }
