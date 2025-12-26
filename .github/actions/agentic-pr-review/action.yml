@@ -59,13 +59,20 @@ runs:
         OLLAMA_HOST: ${{ inputs.ollama_host }}
         JULES_API_KEY: ${{ inputs.jules_api_key }}
       run: |
-        # Fetch base branch to ensure git diff works
-        git fetch origin "${INPUT_BASE:-main}"
-        git branch "${INPUT_BASE:-main}" FETCH_HEAD || true
+        set +e  # Don't exit on errors, we handle them
         
-        # Get the diff
-        DIFF=$(git diff "${INPUT_BASE:-main}"...HEAD 2>/dev/null || git diff HEAD~1 2>/dev/null || echo "No diff available")
-        DIFF_PREVIEW=$(echo "$DIFF" | head -c 50000)
+        # Fetch base branch to ensure git diff works
+        git fetch origin "${INPUT_BASE:-main}" 2>/dev/null || true
+        git branch "${INPUT_BASE:-main}" FETCH_HEAD 2>/dev/null || true
+        
+        # Get the diff to a temp file to avoid broken pipe
+        git diff "${INPUT_BASE:-main}"...HEAD > /tmp/pr_diff.txt 2>/dev/null || \
+          git diff HEAD~1 > /tmp/pr_diff.txt 2>/dev/null || \
+          echo "No diff available" > /tmp/pr_diff.txt
+        
+        # Truncate to 50KB for API
+        head -c 50000 /tmp/pr_diff.txt > /tmp/pr_diff_preview.txt
+        DIFF_PREVIEW=$(cat /tmp/pr_diff_preview.txt)
         
         # Determine which API to use
         if [ -n "$OLLAMA_HOST" ] && [ -n "$OLLAMA_API_KEY" ]; then
