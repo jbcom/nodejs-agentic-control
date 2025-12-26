@@ -52,11 +52,20 @@ export const PROVIDER_CONFIG: Record<SupportedProvider, ProviderConfig> = {
  */
 export const OLLAMA_CONFIG = {
   /** Default model for Ollama Cloud (qwen3-coder has excellent tool support) */
-  defaultModel: 'qwen3-coder:480b',
+  defaultModel: 'qwen3-coder:480b-cloud',
   /** Ollama Cloud API URL (SDK appends /api paths automatically) */
   cloudHost: 'https://ollama.com',
   /** Local Ollama API URL (SDK appends /api paths automatically) */
   localHost: 'http://localhost:11434',
+  /** Enable reliable object generation with automatic JSON repair (v3.0.0+) */
+  reliableObjectGeneration: true,
+  /** Object generation options for better reliability */
+  objectGenerationOptions: {
+    /** Enable automatic JSON repair for malformed outputs */
+    enableTextRepair: true,
+    /** Maximum retries for object generation */
+    maxRetries: 3,
+  },
 } as const;
 
 /**
@@ -129,7 +138,7 @@ export async function loadProvider(providerName: string, apiKey: string): Promis
       throw new Error(`Factory ${config.factory} not found in ${config.package}`);
     }
 
-    // Ollama provider has different config structure
+    // Ollama provider has different config structure (ai-sdk-ollama v3.0.0+)
     if (providerName === 'ollama') {
       // Determine host URL based on API key presence
       const host =
@@ -137,16 +146,37 @@ export async function loadProvider(providerName: string, apiKey: string): Promis
       // Normalize URL to remove any trailing slashes or /api path (SDK appends /api automatically)
       const normalizedHost = host.replace(/\/api\/?$/, '').replace(/\/$/, '');
 
+      // ai-sdk-ollama v3.0.0+ configuration with reliable object generation
       type OllamaProviderFactory = (config: {
         baseURL: string;
         headers?: { Authorization: string };
       }) => unknown;
 
+      // Model factory type with v3 options
+      type OllamaModelFactory = (
+        model: string,
+        options?: {
+          structuredOutputs?: boolean;
+          reliableObjectGeneration?: boolean;
+          objectGenerationOptions?: {
+            enableTextRepair?: boolean;
+            maxRetries?: number;
+          };
+        }
+      ) => unknown;
+
       const provider = (factory as unknown as OllamaProviderFactory)({
         baseURL: normalizedHost,
         headers: apiKey ? { Authorization: `Bearer ${apiKey}` } : undefined,
       });
-      return (model: string) => (provider as ModelFactory)(model);
+
+      // Return a model factory that applies reliability settings by default
+      return (model: string) =>
+        (provider as OllamaModelFactory)(model, {
+          // Enable reliable object generation with automatic JSON repair
+          reliableObjectGeneration: OLLAMA_CONFIG.reliableObjectGeneration,
+          objectGenerationOptions: OLLAMA_CONFIG.objectGenerationOptions,
+        });
     }
 
     const provider = factory({ apiKey });

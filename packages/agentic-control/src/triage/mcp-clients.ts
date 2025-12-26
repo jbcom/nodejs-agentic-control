@@ -15,6 +15,19 @@ import { getConfig, type MCPConfig, type MCPServerConfig } from '../core/config.
 // ─────────────────────────────────────────────────────────────────
 
 const DEFAULT_MCP_CONFIG: MCPConfig = {
+  // ───────────────────────────────────────────────────────────────
+  // Vendor Connectors (Python) - Jules, Cursor, GitHub, Slack, etc.
+  // Provides unified access to all vendor APIs via MCP.
+  // Install: pip install vendor-connectors[mcp]
+  // ───────────────────────────────────────────────────────────────
+  'vendor-connectors': {
+    enabled: true,
+    tokenEnvVar: 'GOOGLE_JULES_API_KEY',
+    tokenEnvVarFallbacks: ['JULES_API_KEY', 'CURSOR_API_KEY'],
+    mode: 'stdio',
+    command: 'python',
+    args: ['-m', 'vendor_connectors.mcp'],
+  },
   cursor: {
     enabled: true,
     tokenEnvVar: 'CURSOR_API_KEY',
@@ -143,6 +156,16 @@ export interface MCPClientConfig {
   github?: Partial<MCPServerConfig> & { token?: string };
   context7?: Partial<MCPServerConfig> & { apiKey?: string };
   '21st-magic'?: Partial<MCPServerConfig> & { apiKey?: string };
+  /**
+   * Vendor Connectors MCP Server (Python)
+   * Provides unified access to Jules, Cursor, GitHub, Slack, Vault, Zoom, etc.
+   * Install: pip install vendor-connectors[mcp]
+   */
+  'vendor-connectors'?: Partial<MCPServerConfig> & {
+    julesApiKey?: string;
+    cursorApiKey?: string;
+    ollamaApiKey?: string;
+  };
 }
 
 export interface MCPClients {
@@ -176,7 +199,9 @@ export async function initializeMCPClients(overrides: MCPClientConfig = {}): Pro
       if ('token' in override && override.token) token = override.token;
     }
 
-    if (!token && name !== 'context7' && name !== '21st-magic') {
+    // Optional servers that can run without tokens
+    const optionalServers = ['context7', '21st-magic', 'vendor-connectors'];
+    if (!token && !optionalServers.includes(name)) {
       // Skip non-optional servers without tokens
       continue;
     }
@@ -191,6 +216,14 @@ export async function initializeMCPClients(overrides: MCPClientConfig = {}): Pro
           if (name === 'github') env.GITHUB_TOKEN = token;
           if (name === 'context7') env.CONTEXT7_API_KEY = token;
           if (name === '21st-magic') env.TWENTY_FIRST_API_KEY = token;
+          // vendor-connectors uses multiple tokens from env vars
+          if (name === 'vendor-connectors') {
+            // Pass through all relevant API keys for vendor-connectors
+            env.GOOGLE_JULES_API_KEY = process.env.GOOGLE_JULES_API_KEY ?? '';
+            env.JULES_API_KEY = process.env.JULES_API_KEY ?? process.env.GOOGLE_JULES_API_KEY ?? '';
+            env.CURSOR_API_KEY = process.env.CURSOR_API_KEY ?? '';
+            env.OLLAMA_API_KEY = process.env.OLLAMA_API_KEY ?? '';
+          }
         }
 
         clients[name] = await createMCPClient({
