@@ -33,8 +33,8 @@ runs:
         ORCH_CMD: ${{ inputs.command }}
         ORCH_ARGS: ${{ inputs.args }}
       run: |
-        # Use exact pinned version of agentic-control to prevent supply chain attacks (CWE-829)
+        # Use exact pinned version of @agentic-dev-library/control to prevent supply chain attacks (CWE-829)
         # and use environment variables for safe argument passing.
         # Note: We split ORCH_ARGS into an array to avoid command injection while allowing multiple flags.
         read -r -a ARGS_ARRAY <<< "$ORCH_ARGS"
-        npx agentic-control@1.1.0 fleet "$ORCH_CMD" "${ARGS_ARRAY[@]}"
+        npx @agentic-dev-library/control@1.2.0 fleet "$ORCH_CMD" "${ARGS_ARRAY[@]}"

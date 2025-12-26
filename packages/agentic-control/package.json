@@ -1,6 +1,6 @@
 {
-  "name": "agentic-control",
-  "version": "1.1.0",
+  "name": "@agentic-dev-library/control",
+  "version": "1.2.0",
   "description": "Unified AI agent fleet management, triage, and orchestration toolkit for control centers",
   "type": "module",
   "main": "./dist/index.js",
@@ -105,7 +105,7 @@
     "tsx": "4.21.0",
     "typescript": "^5.7.0",
     "vitest": "^4.0.14",
-    "vitest-agentic-control": "workspace:*"
+    "@agentic-dev-library/vitest-control": "workspace:*"
   },
   "engines": {
     "node": ">=22.0.0"
@@ -135,11 +135,14 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jbdevprimary/agentic-control.git",
+    "url": "https://github.com/agentic-dev-library/control.git",
     "directory": "packages/agentic-control"
   },
-  "homepage": "https://github.com/jbdevprimary/agentic-control#readme",
+  "homepage": "https://agentic-dev-library.github.io/packages/control/",
   "bugs": {
-    "url": "https://github.com/jbdevprimary/agentic-control/issues"
+    "url": "https://github.com/agentic-dev-library/control/issues"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

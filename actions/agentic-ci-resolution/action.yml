@@ -52,5 +52,5 @@ runs:
           REPO="$GITHUB_REPOSITORY"
         fi
         
-        # Use exact pinned version of agentic-control to prevent supply chain attacks (CWE-829)
-        npx agentic-control@1.1.0 triage fix "$PR_NUM" --repo "$REPO" --iterations "${{ inputs.iterations }}"
+        # Use exact pinned version of @agentic-dev-library/control to prevent supply chain attacks (CWE-829)
+        npx @agentic-dev-library/control@1.2.0 triage fix "$PR_NUM" --repo "$REPO" --iterations "${{ inputs.iterations }}"

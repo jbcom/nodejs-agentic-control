@@ -1,6 +1,9 @@
 name: 'Agentic Issue Triage'
 description: 'Triage a GitHub issue using an AI agent.'
-author: 'jbcom/agentic-control'
+author: 'agentic-dev-library'
+branding:
+  icon: 'alert-circle'
+  color: 'orange'
 
 inputs:
   github_token:
@@ -10,7 +13,7 @@ inputs:
     description: 'The number of the issue to triage.'
     required: true
   model:
-    description: 'The Ollama model to use for the triage.'
+    description: 'The AI model to use for the triage.'
     required: false
     default: 'llama3'
   api_key:
@@ -25,25 +28,23 @@ outputs:
   assignee:
     description: 'The assignee suggested by the agent.'
 
-branding:
-  icon: 'alert-circle'
-  color: 'orange'
-
 runs:
   using: 'composite'
   steps:
-    - name: 'Checkout code'
-      uses: actions/checkout@v4
-
-    - name: 'Install dependencies'
-      shell: bash
-      run: pnpm install --frozen-lockfile
+    - name: Setup Node.js
+      uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+      with:
+        node-version: '22'
 
     - name: 'Run issue triage'
       shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+        INPUT_ISSUE_NUMBER: ${{ inputs.issue_number }}
+        INPUT_MODEL: ${{ inputs.model }}
+        INPUT_API_KEY: ${{ inputs.api_key }}
       run: |
-        pnpm exec agentic-control issue-triage \
-          --issue-number "${{ inputs.issue_number }}" \
-          --model "${{ inputs.model }}" \
-          --api-key "${{ inputs.api_key }}" \
-          --github-token "${{ inputs.github_token }}"
+        # Use exact pinned version of @agentic-dev-library/control to prevent supply chain attacks (CWE-829)
+        npx @agentic-dev-library/control@1.2.0 triage assess "$INPUT_ISSUE_NUMBER" \
+          --model "$INPUT_MODEL"

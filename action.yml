@@ -3,7 +3,7 @@ description: 'AI agent fleet management, sandboxed execution, and orchestration 
 author: 'Jon Bogaty'
 branding:
   icon: 'cpu'
-  color: 'blue'
+  color: 'purple'
 
 inputs:
   command:
@@ -19,7 +19,7 @@ inputs:
     description: 'GitHub token for API access'
     required: false
   version:
-    description: 'agentic-control version to use'
+    description: '@agentic-dev-library/control version to use'
     required: false
     default: 'latest'
 
@@ -35,13 +35,13 @@ runs:
   using: 'composite'
   steps:
     - name: Setup Node.js
-      uses: actions/setup-node@v6
+      uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
       with:
         node-version: '22'
 
-    - name: Install agentic-control
+    - name: Install @agentic-dev-library/control
       shell: bash
-      run: npm install -g agentic-control@${{ inputs.version }}
+      run: npm install -g @agentic-dev-library/control@${{ inputs.version }}
 
     - name: Run command
       id: run
@@ -49,36 +49,43 @@ runs:
       env:
         GH_TOKEN: ${{ inputs.github_token }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
+        INPUT_COMMAND: ${{ inputs.command }}
+        INPUT_ARGS: ${{ inputs.args }}
+        INPUT_CONFIG: ${{ inputs.config }}
       run: |
-        # Build command
-        CMD="npx agentic-control ${{ inputs.command }}"
+        # Build command array safely to prevent command injection
+        declare -a CMD_ARGS
+        CMD_ARGS+=("$INPUT_COMMAND")
 
-        if [ -n "${{ inputs.args }}" ]; then
-          CMD="$CMD ${{ inputs.args }}"
+        if [ -n "$INPUT_ARGS" ]; then
+          read -r -a EXTRA_ARGS <<< "$INPUT_ARGS"
+          CMD_ARGS+=("${EXTRA_ARGS[@]}")
         fi
 
-        if [ -n "${{ inputs.config }}" ]; then
-          CMD="$CMD --config ${{ inputs.config }}"
+        if [ -n "$INPUT_CONFIG" ]; then
+          CMD_ARGS+=("--config" "$INPUT_CONFIG")
         fi
 
-        echo "Running: $CMD"
+        echo "Running: agentic ${CMD_ARGS[*]}"
 
         # Run and capture output
         set +e
-        OUTPUT=$($CMD 2>&1)
+        OUTPUT=$(npx @agentic-dev-library/control "${CMD_ARGS[@]}" 2>&1)
         EXIT_CODE=$?
         set -e
 
         echo "$OUTPUT"
 
-        # Set outputs
-        echo "result<<EOF" >> $GITHUB_OUTPUT
-        echo "$OUTPUT" >> $GITHUB_OUTPUT
-        echo "EOF" >> $GITHUB_OUTPUT
+        # Set outputs using heredoc for multi-line safety
+        {
+          echo "result<<EOF"
+          echo "$OUTPUT"
+          echo "EOF"
+        } >> "$GITHUB_OUTPUT"
 
         if [ $EXIT_CODE -eq 0 ]; then
-          echo "status=success" >> $GITHUB_OUTPUT
+          echo "status=success" >> "$GITHUB_OUTPUT"
         else
-          echo "status=failure" >> $GITHUB_OUTPUT
+          echo "status=failure" >> "$GITHUB_OUTPUT"
           exit $EXIT_CODE
         fi
