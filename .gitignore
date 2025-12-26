@@ -24,3 +24,4 @@ coverage/
 # OS
 .DS_Store
 
+node-compile-cache/
