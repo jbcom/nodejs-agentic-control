@@ -1,0 +1,49 @@
+name: Ecosystem Harvester
+
+on:
+  schedule:
+    # Run every 15 minutes
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (no mutations)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  harvest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4 # v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v4
+        with:
+          node-version: '20'
+
+      - name: Run Harvester
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          CURSOR_SESSION_TOKEN: ${{ secrets.CURSOR_SESSION_TOKEN }}
+          GOOGLE_JULES_API_KEY: ${{ secrets.GOOGLE_JULES_API_KEY }}
+          JULES_GITHUB_TOKEN: ${{ secrets.JULES_GITHUB_TOKEN }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: node scripts/ecosystem-harvester.mjs
+
+      - name: Post Summary
+        if: always()
+        run: |
+          if [ -f harvester-report.json ]; then
+            echo "### Ecosystem Harvester Summary 🌾" >> $GITHUB_STEP_SUMMARY
+            echo '```json' >> $GITHUB_STEP_SUMMARY
+            cat harvester-report.json >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
