@@ -1,0 +1,117 @@
+name: Ecosystem Reviewer
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review]
+
+env:
+  OLLAMA_HOST: ${{ secrets.OLLAMA_API_URL || vars.OLLAMA_HOST || 'https://ollama.com' }}
+  OLLAMA_MODEL: ${{ vars.OLLAMA_MODEL || 'glm-4.6:cloud' }}
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  review:
+    name: AI Code Review
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    outputs:
+      suggestion_count: ${{ steps.review.outputs.suggestion_count }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Review PR
+        id: review
+        uses: ./.github/actions/agentic-pr-review
+        with:
+          github_token: ${{ github.token }}
+          model: ${{ env.OLLAMA_MODEL }}
+          ollama_api_key: ${{ secrets.OLLAMA_API_KEY }}
+          ollama_host: ${{ env.OLLAMA_HOST }}
+          jules_api_key: ${{ secrets.JULES_API_KEY || secrets.GOOGLE_JULES_API_KEY }}
+
+  delegate-to-jules:
+    name: Delegate to Jules
+    needs: review
+    if: needs.review.outputs.suggestion_count > 5
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for API Key
+        id: check
+        env:
+          GOOGLE_JULES_API_KEY: ${{ secrets.GOOGLE_JULES_API_KEY }}
+        run: |
+          if [[ -z "$GOOGLE_JULES_API_KEY" ]]; then
+            echo "available=false" >> $GITHUB_OUTPUT
+          else
+            echo "available=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Acknowledge
+        if: steps.check.outputs.available == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} --body "🤖 Found ${{ needs.review.outputs.suggestion_count }} suggestions. Delegating to Jules for a more in-depth refactor..."
+
+      - name: Create Jules Session
+        if: steps.check.outputs.available == 'true'
+        id: jules
+        env:
+          GOOGLE_JULES_API_KEY: ${{ secrets.GOOGLE_JULES_API_KEY }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          TASK=$(cat <<EOM
+          Refactor pull request #${PR_NUMBER}: $PR_TITLE
+
+          The following is the PR description:
+          $PR_BODY
+
+          The PR has been flagged for having multiple issues. Please perform a comprehensive refactoring.
+          EOM
+          )
+
+          RESPONSE=$(curl -s -X POST "https://jules.googleapis.com/v1alpha/sessions" \
+            -H "X-Goog-Api-Key: $GOOGLE_JULES_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "$(jq -n \
+              --arg task "$TASK" \
+              --arg repo "${{ github.repository }}" \
+              --arg branch "${{ github.event.pull_request.head.sha }}" \
+              '{
+                prompt: $task,
+                sourceContext: {
+                  source: ("sources/github/" + ($repo | split("/")[0]) + "/" + ($repo | split("/")[1])),
+                  githubRepoContext: { startingBranch: $branch }
+                },
+                automationMode: "AUTO_CREATE_PR"
+              }')")
+
+          SESSION_ID=$(echo "$RESPONSE" | jq -r '.id // empty')
+          SESSION_URL="https://jules.google.com/session/$SESSION_ID"
+
+          echo "session_url=$SESSION_URL" >> $GITHUB_OUTPUT
+          echo "session_id=$SESSION_ID" >> $GITHUB_OUTPUT
+
+      - name: Post Session Link
+        if: steps.check.outputs.available == 'true' && steps.jules.outputs.session_id != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} --body "## 🤖 Jules Session Created
+
+          ➡️ **[Monitor Session](${{ steps.jules.outputs.session_url }})**
+
+          Jules will analyze the PR and create a new PR with the suggested refactoring."
+
+      - name: Post API Key Missing
+        if: steps.check.outputs.available == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} --body "⚠️ GOOGLE_JULES_API_KEY not configured. Cannot delegate to Jules."
