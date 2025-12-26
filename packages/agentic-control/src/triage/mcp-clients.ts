@@ -216,14 +216,21 @@ export async function initializeMCPClients(overrides: MCPClientConfig = {}): Pro
           if (name === 'github') env.GITHUB_TOKEN = token;
           if (name === 'context7') env.CONTEXT7_API_KEY = token;
           if (name === '21st-magic') env.TWENTY_FIRST_API_KEY = token;
-          // vendor-connectors uses multiple tokens from env vars
-          if (name === 'vendor-connectors') {
-            // Pass through all relevant API keys for vendor-connectors
-            env.GOOGLE_JULES_API_KEY = process.env.GOOGLE_JULES_API_KEY ?? '';
-            env.JULES_API_KEY = process.env.JULES_API_KEY ?? process.env.GOOGLE_JULES_API_KEY ?? '';
-            env.CURSOR_API_KEY = process.env.CURSOR_API_KEY ?? '';
-            env.OLLAMA_API_KEY = process.env.OLLAMA_API_KEY ?? '';
-          }
+        }
+
+        // vendor-connectors uses multiple tokens from env vars (outside token check per AI review)
+        if (name === 'vendor-connectors') {
+          const vcOverride = overrides['vendor-connectors'];
+          // Pass through all relevant API keys for vendor-connectors, respecting overrides
+          env.GOOGLE_JULES_API_KEY =
+            vcOverride?.julesApiKey ?? process.env.GOOGLE_JULES_API_KEY ?? '';
+          env.JULES_API_KEY =
+            vcOverride?.julesApiKey ??
+            process.env.JULES_API_KEY ??
+            process.env.GOOGLE_JULES_API_KEY ??
+            '';
+          env.CURSOR_API_KEY = vcOverride?.cursorApiKey ?? process.env.CURSOR_API_KEY ?? '';
+          env.OLLAMA_API_KEY = vcOverride?.ollamaApiKey ?? process.env.OLLAMA_API_KEY ?? '';
         }
 
         clients[name] = await createMCPClient({

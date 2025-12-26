@@ -75,8 +75,8 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3(zod@4.2.1)
       ai-sdk-ollama:
-        specifier: ^2.0.0
-        version: 2.2.0(ai@6.0.3(zod@4.2.1))(zod@4.2.1)
+        specifier: ^3.0.0
+        version: 3.0.0(ai@6.0.3(zod@4.2.1))(zod@4.2.1)
       commander:
         specifier: ^14.0.2
         version: 14.0.2
@@ -1043,12 +1043,6 @@ packages:
   aggregate-error@5.0.0:
     resolution: {integrity: sha512-gOsf2YwSlleG6IjRYG2A7k0HmBMEo6qVNk9Bp/EaLgAJT5ngH6PXbqa4ItvnEwCm/velL5jAnQgsHsWnjhGmvw==}
     engines: {node: '>=18'}
-
-  ai-sdk-ollama@2.2.0:
-    resolution: {integrity: sha512-M7zDxlmnnIyFQCDxgQj+ln4g1KeUWDLfO5a3aZbY334xJUSlrZOqEoRDxNEpmuiZF/NCP7QpxQ4oQA7HEECHBA==}
-    engines: {node: '>=22'}
-    peerDependencies:
-      ai: ^5.0.116
 
   ai-sdk-ollama@3.0.0:
     resolution: {integrity: sha512-ik0BkfaB0jxR62s+kx64UTmZVVP/qsy/tCU2K5L341rF4L0f9ofE/lA34q0DIX4c293wvIMsQFRuuZy86CAwjQ==}
@@ -3671,15 +3665,6 @@ snapshots:
     dependencies:
       clean-stack: 5.3.0
       indent-string: 5.0.0
-
-  ai-sdk-ollama@2.2.0(ai@6.0.3(zod@4.2.1))(zod@4.2.1):
-    dependencies:
-      '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.19(zod@4.2.1)
-      ai: 6.0.3(zod@4.2.1)
-      ollama: 0.6.3
-    transitivePeerDependencies:
-      - zod
 
   ai-sdk-ollama@3.0.0(ai@6.0.3(zod@4.2.1))(zod@4.2.1):
     dependencies:
