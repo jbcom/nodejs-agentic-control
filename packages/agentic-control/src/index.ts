@@ -18,10 +18,13 @@
 
 // GitHub Actions integration
 export * from './actions/index.js';
-// Core exports (for backward compatibility)
+
+// Core exports (maintaining existing API surface)
 export * from './core/index.js';
+
 // Crew tool (agentic-crew CLI integration)
 export * from './crews/index.js';
+
 // Fleet management
 export {
   type CoordinationConfig,
