@@ -85,6 +85,30 @@ export interface MCPConfig {
   [key: string]: MCPServerConfig | undefined;
 }
 
+export interface RoleConfig {
+  /** Enable/disable the role */
+  enabled?: boolean;
+  /** Override the system prompt */
+  systemPrompt?: string;
+  /** Model override */
+  model?: string;
+}
+
+export interface RolesConfig {
+  /** Sage role configuration */
+  sage?: RoleConfig;
+  /** Harvester role configuration */
+  harvester?: RoleConfig;
+  /** Curator role configuration */
+  curator?: RoleConfig;
+  /** Reviewer role configuration */
+  reviewer?: RoleConfig;
+  /** Fixer role configuration */
+  fixer?: RoleConfig;
+  /** Delegator role configuration */
+  delegator?: RoleConfig;
+}
+
 export interface AgenticConfig {
   /** Token configuration for multi-org access */
   tokens?: Partial<TokenConfig>;
@@ -117,6 +141,9 @@ export interface AgenticConfig {
 
   /** MCP server configuration */
   mcp?: MCPConfig;
+
+  /** Roles configuration */
+  roles?: RolesConfig;
 }
 
 // ============================================
