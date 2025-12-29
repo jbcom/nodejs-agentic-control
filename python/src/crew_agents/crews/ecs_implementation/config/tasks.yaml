@@ -1,0 +1,70 @@
+design_components:
+  description: >
+    Design ECS component schemas based on the game design documents.
+
+    Required components (from existing code in src/ecs/):
+    - TransformComponent (position, rotation, scale)
+    - SpeciesComponent (creature type, stats)
+    - AIComponent (behavior state, targets)
+    - MovementComponent (velocity, max speed)
+    - CombatComponent (health, damage, cooldowns)
+    - AnimationComponent (current animation, blend)
+    - BiomeComponent (current biome, modifiers)
+
+    Follow Miniplex patterns:
+    - Pure data, no methods
+    - Minimal fields per component
+    - Proper TypeScript types
+    - Export all types
+
+    Reference existing components in src/ecs/components.ts
+  expected_output: >
+    Component Design Document with:
+    - Component interface definitions (TypeScript)
+    - Justification for each field
+    - Relationships between components
+    - Query patterns (which components are queried together)
+  agent: ecs_architect
+
+implement_components:
+  description: >
+    Implement the designed components as TypeScript files.
+
+    Requirements:
+    - Add component interfaces to src/ecs/components.ts
+    - Follow existing naming conventions
+    - Zero TypeScript errors (strict mode)
+    - Use existing patterns as reference
+
+    The code must compile with `pnpm run build`
+  expected_output: >
+    TypeScript component files ready to be placed in the codebase.
+    Each component should be a separate file with proper exports.
+    Include the updated components.ts barrel file.
+  agent: typescript_engineer
+
+implement_systems:
+  description: >
+    Implement ECS systems that operate on the components.
+
+    Core systems needed:
+    - MovementSystem (apply velocity to position)
+    - AISystem (run behavior trees, update state)
+    - CombatSystem (process attacks, apply damage)
+    - SpawnSystem (create entities from definitions)
+    - BiomeSystem (apply biome effects)
+
+    Systems must:
+    - Use Miniplex queries (world.with(), world.without())
+    - Run in useFrame with proper delta time handling
+    - Follow execution order (see docs/architecture/ECS_SYSTEMS.md)
+    - Be frame-rate independent
+
+    Target: 60 FPS on mobile
+  expected_output: >
+    System implementation files with:
+    - Properly structured useFrame hooks
+    - Efficient queries
+    - Clear documentation
+    - Performance considerations noted
+  agent: systems_engineer

@@ -1,0 +1,32 @@
+
+
+<!-- Source: .ruler/workflow_configuration.md -->
+
+# CrewAI Workflow Configuration
+
+## Agent Hierarchy
+
+**Technical Director** (Manager)
+- Delegates to specialist agents
+- Max 40 iterations, 5 reasoning attempts
+
+**Specialists** (Workers)
+- ECS Architect, Yuka AI Engineer, Rendering Engineer, etc.
+- Max 25-30 iterations, 3 reasoning attempts
+- No delegation
+
+## MCP Tool Access
+
+Agents have filtered access to MCP servers based on role:
+- **All agents**: Git, Filesystem, Knowledge
+- **Chief Architect**: Context7 (doc fetching)
+- **Rendering Engineer**: Vite dev server
+- **QA Tester**: Playwright, testing tools
+
+## Deliverable Standards
+
+Every CrewAI task output must include:
+1. README.md with usage docs
+2. Passing unit tests
+3. TypeScript type exports (if applicable)
+4. Integration notes for frontend

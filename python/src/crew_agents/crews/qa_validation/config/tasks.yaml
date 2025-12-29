@@ -1,0 +1,65 @@
+review_design:
+  description: >
+    Review design documents for completeness and quality.
+
+    Check for:
+    1. COMPLETENESS: All required sections present
+    2. CONSISTENCY: No contradictions between documents
+    3. ACTIONABILITY: Can be implemented as written
+    4. CONSTRAINTS: Respects mobile performance budgets
+    5. FORMAT: Follows established templates
+
+    Input: Design documents from World, Creature, or Gameplay crews
+    Output: Review report with pass/fail and required changes
+  expected_output: >
+    Design Review Report containing:
+    - Overall pass/fail verdict
+    - Checklist of requirements (met/unmet)
+    - Specific issues to address
+    - Recommendations for improvement
+    - Approval status for next phase
+  agent: design_reviewer
+
+review_code:
+  description: >
+    Review generated code for quality and correctness.
+
+    Check for:
+    1. COMPILATION: Code compiles with zero errors
+    2. TYPES: Strict TypeScript compliance, no 'any'
+    3. PATTERNS: Follows .ruler guidelines
+    4. PERFORMANCE: No obvious performance issues
+    5. TESTS: Test coverage where applicable
+
+    Run: pnpm run check (type checking)
+    Run: pnpm run lint (if available)
+  expected_output: >
+    Code Review Report containing:
+    - Compilation status
+    - Type coverage assessment
+    - Pattern adherence score
+    - Performance concerns
+    - Required fixes before approval
+  agent: code_reviewer
+
+validate_integration:
+  description: >
+    Validate integration between system outputs.
+
+    Check that:
+    1. ECS components match design specs
+    2. Creature stats align with balance docs
+    3. Asset specs reference valid entity types
+    4. Shader uniforms match expected inputs
+    5. All contracts are satisfied
+
+    Reference contracts in shared/contracts/
+    Verify data flows end-to-end.
+  expected_output: >
+    Integration Validation Report containing:
+    - Contract compliance matrix
+    - Data flow verification results
+    - Identified integration issues
+    - Dependency verification
+    - Ready-for-human-review status
+  agent: integration_tester

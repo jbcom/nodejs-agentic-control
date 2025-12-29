@@ -1,0 +1,79 @@
+design_species_roster:
+  description: >
+    Design the complete species roster for the game.
+
+    Categories:
+    1. PLAYER: River Otter (Lutra canadensis)
+    2. PREDATORS: Wolf, Fox, Bear, Badger, Eagle, Pike
+    3. PREY: Rabbit, Deer, Mouse, Frog, Fish, Crayfish
+    4. NEUTRAL: Turtle, Beaver, Heron, Songbirds
+
+    For each species, define:
+    - Scientific name and common name
+    - Size, mass, and physical description
+    - Habitat preferences (which biomes)
+    - Diet and hunting/foraging behavior
+    - Threat level to the player
+    - Unique characteristics or abilities
+
+    Reference the DFU creature mappings in shared/backend/dfu_analysis/
+    for fantasy-to-natural-world conversion patterns.
+  expected_output: >
+    A Species Roster Document with detailed profiles for each creature,
+    formatted to match the SpeciesContract TypeScript interface.
+    Include all required fields: id, archetype, displayName, scientificName,
+    size, mass, maxSpeed, turnRate, etc.
+  agent: creature_designer
+
+define_behaviors:
+  description: >
+    Define AI behavior patterns for all creatures using Yuka.js concepts.
+
+    Behavior archetypes:
+    1. PREDATOR: Hunt → Stalk → Attack → Eat → Rest
+    2. PREY: Graze → Alert → Flee → Hide → Return
+    3. OMNIVORE: Forage → Assess → Engage/Flee
+    4. NEUTRAL: Patrol → React → Return
+
+    For each species, define:
+    - State machine with transitions
+    - Detection ranges and reaction times
+    - Group behavior (pack hunting, herding)
+    - Territory and patrol patterns
+    - Time-of-day variations
+
+    The behaviors should integrate with Yuka.js steering behaviors
+    and state machine patterns.
+  expected_output: >
+    A Behavior Design Document with:
+    - State machine diagrams (text representation)
+    - Transition triggers and conditions
+    - Numerical parameters (detection range, flee speed, etc.)
+    - Yuka.js implementation notes
+  agent: behavior_specialist
+
+balance_stats:
+  description: >
+    Balance all creature stats for engaging gameplay.
+
+    The otter (player) baseline:
+    - Health: 100
+    - Damage: 10-15
+    - Speed: 8 m/s (swim), 5 m/s (land)
+    - Detection avoidance: Medium
+
+    Balance considerations:
+    1. Combat should be avoidable through stealth/speed
+    2. Direct combat should be risky but possible
+    3. Pack predators should require strategy
+    4. Prey should provide meaningful rewards
+    5. Difficulty should scale by biome
+
+    Create stat curves that feel fair across all player skill levels.
+  expected_output: >
+    A Balance Spreadsheet (in markdown table format) showing:
+    - All creature stats relative to player baseline
+    - Combat outcome predictions (1v1, group scenarios)
+    - Difficulty ratings by biome
+    - Recommended player level/gear for each encounter type
+  agent: stats_balancer

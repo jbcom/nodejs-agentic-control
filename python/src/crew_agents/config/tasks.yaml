@@ -1,0 +1,177 @@
+
+# -------------------------------------------------------------------------
+# PHASE 0: ALPHA - Context Loading & Validation
+# -------------------------------------------------------------------------
+alpha_context_load:
+  description: |
+    ALPHA TASK: Load complete project context before any work begins.
+    
+    Actions:
+    1. Read projectbrief.md for project goals and constraints
+    2. Query ConPort schema to understand current state
+    3. Read .ruler/ files for architectural patterns
+    4. Identify any missing prerequisites or blockers
+    
+    Validation Criteria:
+    - All context files are accessible
+    - No critical blockers identified
+    - Prerequisites are documented
+    
+    Output Format: Markdown checklist with:
+    - [ ] Context item loaded
+    - [ ] Prerequisite validated
+    - [ ] Blocker identified (if any)
+  expected_output: |
+    Markdown report with:
+    ## Context Loaded
+    - List of files read
+    - Current project state summary
+    
+    ## Prerequisites
+    - [ ] Checklist of validated prerequisites
+    
+    ## Blockers (if any)
+    - Description of any blockers
+    
+    ## Ready to Proceed
+    - Yes/No with reasoning
+  agent: project_manager
+  human_input: false
+
+# -------------------------------------------------------------------------
+# PHASE 1: FOUNDATION - Parallel schema validation
+# -------------------------------------------------------------------------
+validate_ecs_component_schemas:
+  description: |
+    Validate existing ECS component schemas in src/ecs/.
+
+    Focus Areas:
+    1. TypeScript compilation with zero errors
+    2. Adherence to Miniplex patterns
+    3. Type exports are complete and correct
+    4. Component schemas are minimal and focused
+
+    DO NOT create new components. ONLY validate existing ones.
+
+    Validation Steps:
+    1. Run `pnpm run build` to check TypeScript compilation
+    2. Check each component file against patterns
+    3. Verify type exports exist
+    4. Document any issues found
+    
+    If issues found: Create a remediation plan, do NOT fix yet.
+  expected_output: |
+    ## Validation Report
+    
+    ### TypeScript Compilation
+    - Status: PASS/FAIL
+    - Errors: (list if any)
+    
+    ### Pattern Compliance
+    - AIComponent.ts: PASS/FAIL (reasoning)
+    - AnimationComponent.ts: PASS/FAIL (reasoning)
+    - [continue for all components]
+    
+    ### Type Exports
+    - Complete: YES/NO
+    - Missing: (list if any)
+    
+    ### Remediation Plan (if needed)
+    - Issue 1: [description] → [fix]
+    - Issue 2: [description] → [fix]
+    
+    ### Ready for Next Phase
+    - YES/NO with reasoning
+  agent: ecs_architect
+  context: [alpha_context_load]
+  async_execution: false
+
+validate_dfu_data_contracts:
+  description: |
+    Validate Daggerfall Unity data mappings in shared/backend/dfu_analysis/.
+    
+    Focus Areas:
+    1. biomes.json structure matches BiomeContract.ts
+    2. species.json structure matches SpeciesContract.ts
+    3. Data completeness (no missing required fields)
+    4. Type safety between backend and frontend contracts
+    
+    DO NOT modify contracts yet. ONLY validate.
+    
+    Validation Steps:
+    1. Load shared/contracts/*.ts
+    2. Load shared/backend/dfu_analysis/mappings/*.json
+    3. Verify structural alignment
+    4. Check for missing data
+    5. Document any mismatches
+  expected_output: |
+    ## Contract Validation Report
+    
+    ### BiomeContract Alignment
+    - Structure matches: YES/NO
+    - Missing fields: (list if any)
+    - Type mismatches: (list if any)
+    
+    ### SpeciesContract Alignment
+    - Structure matches: YES/NO
+    - Missing fields: (list if any)
+    - Type mismatches: (list if any)
+    
+    ### Data Completeness
+    - Biomes: X/Y complete
+    - Species: X/Y complete
+    
+    ### Remediation Plan (if needed)
+    - Issue 1: [description] → [fix]
+    
+    ### Ready for Next Phase
+    - YES/NO with reasoning
+  agent: ecs_architect
+  context: [alpha_context_load]
+  async_execution: false
+
+# -------------------------------------------------------------------------
+# OMEGA: Documentation & Context Recording
+# -------------------------------------------------------------------------
+omega_record_progress:
+  description: |
+    OMEGA TASK: Record all decisions, progress, and learnings into ConPort.
+    
+    Actions:
+    1. Summarize all completed work
+    2. Document architectural decisions made
+    3. Record patterns discovered
+    4. Update ConPort with current state
+    5. Create handoff notes for next phase
+    
+    This runs AFTER every major phase completion.
+  expected_output: |
+    ## ConPort Update
+    
+    ### Work Completed
+    - Phase 1: [summary]
+    - Phase 2: [summary]
+    - Phase 3: [summary]
+    
+    ### Architectural Decisions
+    - Decision 1: [what, why, alternatives considered]
+    - Decision 2: [what, why, alternatives considered]
+    
+    ### Patterns Discovered
+    - Pattern 1: [description, when to use]
+    - Pattern 2: [description, when to use]
+    
+    ### Current State
+    - ECS schemas: [status]
+    - Prototypes: [list with status]
+    - Technical debt: [list]
+    
+    ### Handoff Notes for Next Phase
+    - Prerequisites: [checklist]
+    - Context to review: [files]
+    - Open questions: [list]
+    
+    ### ConPort Updated
+    - YES/NO with timestamp
+  agent: technical_writer
+  context: [validate_ecs_component_schemas, validate_dfu_data_contracts]
