@@ -32,6 +32,7 @@ import { cosmiconfigSync } from 'cosmiconfig';
 import { setTokenConfig } from './tokens.js';
 import type { TokenConfig } from './types.js';
 import { validateConfig } from './validation.js';
+import type { RolesConfig } from '../roles/types.js';
 
 // ============================================
 // Configuration Types
@@ -83,30 +84,6 @@ export interface MCPConfig {
   '21st-magic'?: MCPServerConfig;
   /** Custom MCP servers */
   [key: string]: MCPServerConfig | undefined;
-}
-
-export interface RoleConfig {
-  /** Enable/disable the role */
-  enabled?: boolean;
-  /** Override the system prompt */
-  systemPrompt?: string;
-  /** Model override */
-  model?: string;
-}
-
-export interface RolesConfig {
-  /** Sage role configuration */
-  sage?: RoleConfig;
-  /** Harvester role configuration */
-  harvester?: RoleConfig;
-  /** Curator role configuration */
-  curator?: RoleConfig;
-  /** Reviewer role configuration */
-  reviewer?: RoleConfig;
-  /** Fixer role configuration */
-  fixer?: RoleConfig;
-  /** Delegator role configuration */
-  delegator?: RoleConfig;
 }
 
 export interface AgenticConfig {

@@ -156,7 +156,7 @@ export async function executeSageRole(
     model: LanguageModel,
     context?: Partial<RoleExecutionContext>
 ): Promise<RoleExecutionResult> {
-    const role = getDefaultRole('sage');
+    const role = context?.role || getDefaultRole('sage');
     if (!role) {
         return { success: false, error: 'Sage role not found' };
     }
