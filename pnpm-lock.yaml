@@ -119,11 +119,10 @@ importers:
         version: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@22.19.3)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/providers:
-    dependencies:
+    devDependencies:
       '@agentic/triage':
         specifier: github:agentic-dev-library/triage#1a507f900b4aae96eea51f85e6c68ba4b72b54a8
         version: https://codeload.github.com/agentic-dev-library/triage/tar.gz/1a507f900b4aae96eea51f85e6c68ba4b72b54a8
-    devDependencies:
       tsup:
         specifier: ^8.5.0
         version: 8.5.1(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)
@@ -132,6 +131,16 @@ importers:
         version: 5.9.3
 
   packages/vitest-agentic-control:
+    dependencies:
+      '@ai-sdk/mcp':
+        specifier: '>=1.0.0'
+        version: 1.0.1(zod@4.2.1)
+      '@modelcontextprotocol/sdk':
+        specifier: '>=1.0.0'
+        version: 1.25.1(hono@4.11.1)(zod@4.2.1)
+      ai:
+        specifier: '>=5.0.0'
+        version: 6.0.3(zod@4.2.1)
     devDependencies:
       '@types/node':
         specifier: ^22.15.0
