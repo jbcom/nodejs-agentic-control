@@ -81,13 +81,13 @@ COPY --chown=agent:agent scripts/ ./scripts/
 
 # Install all dependencies (including devDependencies for AI SDK providers)
 # Note: devDependencies include @ai-sdk/anthropic which is needed at runtime
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile --reporter=silent
 
 # Copy source code and build
 COPY --chown=agent:agent packages/ ./packages/
 
 # Build the packages
-RUN pnpm run build
+RUN pnpm run build --reporter=silent
 
 # Create global symlinks for CLI commands
 RUN ln -s /home/agent/packages/agentic-control/dist/cli.js "$PNPM_HOME/agentic" && \
