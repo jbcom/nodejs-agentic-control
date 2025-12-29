@@ -47,7 +47,7 @@ export function applyRoleConfig(
     }
 
     if (config.revokedCapabilities) {
-        capabilities = capabilities.filter(c => !config.revokedCapabilities!.includes(c));
+        capabilities = capabilities.filter(c => !config.revokedCapabilities?.includes(c));
     }
 
     merged.capabilities = capabilities;
@@ -189,7 +189,7 @@ ${triage.summary}
                 { type: 'quick_triage', description: 'Performed quick triage analysis', result: 'success' },
             ],
         };
-    } catch (error) {
+    } catch (_error) {
         // Fallback to simple text generation
         const { text } = await generateText({
             model,
