@@ -29,13 +29,12 @@
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": {
-    "@agentic/triage": "github:agentic-dev-library/triage#1a507f900b4aae96eea51f85e6c68ba4b72b54a8"
-  },
+  "dependencies": {},
   "peerDependencies": {
     "@agentic/triage": ">=0.2.0"
   },
   "devDependencies": {
+    "@agentic/triage": "github:agentic-dev-library/triage#1a507f900b4aae96eea51f85e6c68ba4b72b54a8",
     "tsup": "^8.5.0",
     "typescript": "^5.3.0"
   }

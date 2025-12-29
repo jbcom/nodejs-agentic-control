@@ -51,6 +51,9 @@
     "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
+    "@ai-sdk/mcp": ">=1.0.0",
+    "@modelcontextprotocol/sdk": ">=1.0.0",
+    "ai": ">=5.0.0",
     "vitest": ">=1.0.0"
   },
   "devDependencies": {
