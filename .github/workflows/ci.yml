@@ -34,7 +34,7 @@ jobs:
           version: 9
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --no-frozen-lockfile
 
       - name: Build
         run: pnpm run build
@@ -61,7 +61,7 @@ jobs:
           version: 9
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --no-frozen-lockfile
 
       - name: Biome check (lint + format)
         run: pnpm run check
@@ -81,7 +81,7 @@ jobs:
           version: 9
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --no-frozen-lockfile
 
       - name: TypeScript type check
         run: pnpm run typecheck
@@ -102,7 +102,7 @@ jobs:
           version: 9
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --no-frozen-lockfile
 
       - name: Build packages
         run: pnpm run build

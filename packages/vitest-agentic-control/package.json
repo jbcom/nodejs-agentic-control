@@ -37,8 +37,9 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
+    "build": "tsup",
+    "build:types": "tsc --emitDeclarationOnly",
+    "dev": "tsup --watch",
     "test": "vitest",
     "lint": "biome lint src/",
     "lint:fix": "biome lint --write src/",
@@ -54,6 +55,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.15.0",
+    "tsup": "^8.5.0",
     "typescript": "^5.7.0",
     "vitest": "^4.0.14"
   },

@@ -24,7 +24,9 @@
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsup",
+    "build:types": "tsc --emitDeclarationOnly",
+    "dev": "tsup --watch",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -34,6 +36,7 @@
     "@agentic/triage": ">=0.2.0"
   },
   "devDependencies": {
+    "tsup": "^8.5.0",
     "typescript": "^5.3.0"
   }
 }
