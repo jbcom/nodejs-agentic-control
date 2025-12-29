@@ -24,6 +24,14 @@ import type { Agent, Result } from './core/types.js';
 import { Fleet } from './fleet/index.js';
 import { HandoffManager } from './handoff/index.js';
 import { VERSION } from './index.js';
+import {
+  DEFAULT_ROLES,
+  executeSageRole,
+  findRoleByTrigger,
+  getDefaultRoleIds,
+  getEffectiveRole,
+  listRoles,
+} from './roles/index.js';
 import { AIAnalyzer } from './triage/index.js';
 
 const program = new Command();
@@ -929,6 +937,170 @@ triageCmd
     } catch (err) {
       console.error('❌ Analysis failed:', err instanceof Error ? err.message : err);
       process.exit(1);
+    }
+  });
+
+// ============================================
+// Roles Commands
+// ============================================
+
+const rolesCmd = program.command('roles').description('Configurable AI agent personas');
+
+rolesCmd
+  .command('list')
+  .description('List available roles')
+  .option('--json', 'Output as JSON')
+  .action((opts) => {
+    const cfg = getConfig();
+    const roles = listRoles(cfg.roles);
+
+    if (opts.json) {
+      output(roles, true);
+    } else {
+      console.log('=== Available Roles ===\n');
+      for (const role of roles) {
+        const triggers = role.triggers
+          .filter((t) => t.type === 'comment')
+          .map((t) => (t as { pattern: string }).pattern)
+          .join(', ');
+
+        console.log(`${role.icon} ${role.name} (${role.id})`);
+        console.log(`   ${role.description}`);
+        console.log(`   Triggers: ${triggers || 'manual only'}`);
+        console.log(
+          `   Capabilities: ${role.capabilities.slice(0, 3).join(', ')}${role.capabilities.length > 3 ? '...' : ''}`
+        );
+        console.log();
+      }
+    }
+  });
+
+rolesCmd
+  .command('info')
+  .description('Show detailed information about a role')
+  .argument('<role-id>', 'Role ID (sage, harvester, curator, reviewer, fixer, delegator)')
+  .option('--json', 'Output as JSON')
+  .action((roleId, opts) => {
+    const cfg = getConfig();
+    const role = getEffectiveRole(roleId, cfg.roles);
+
+    if (!role) {
+      console.error(`❌ Role not found: ${roleId}`);
+      console.error(`Available roles: ${getDefaultRoleIds().join(', ')}`);
+      process.exit(1);
+    }
+
+    if (opts.json) {
+      output(role, true);
+    } else {
+      console.log(`\n${role.icon} ${role.name}\n`);
+      console.log(`ID: ${role.id}`);
+      console.log(`Description: ${role.description}`);
+      console.log(`\nCapabilities:`);
+      for (const cap of role.capabilities) {
+        console.log(`  • ${cap}`);
+      }
+      console.log(`\nTriggers:`);
+      for (const trigger of role.triggers) {
+        if (trigger.type === 'comment') {
+          console.log(`  💬 Comment: ${(trigger as { pattern: string }).pattern}`);
+        } else if (trigger.type === 'schedule') {
+          console.log(`  ⏰ Schedule: ${(trigger as { cron: string }).cron}`);
+        } else if (trigger.type === 'event') {
+          console.log(`  🎯 Events: ${(trigger as { events: string[] }).events.join(', ')}`);
+        } else {
+          console.log(`  🖐️ Manual`);
+        }
+      }
+      console.log(`\nPermissions:`);
+      console.log(`  Can spawn agents: ${role.canSpawnAgents ? '✅' : '❌'}`);
+      console.log(`  Can modify repo: ${role.canModifyRepo ? '✅' : '❌'}`);
+      console.log(`  Can merge PRs: ${role.canMerge ? '✅' : '❌'}`);
+      console.log(`\nDefault Model: ${role.defaultModel || 'provider default'}`);
+      console.log(`Temperature: ${role.temperature ?? 0.3}`);
+      console.log(`\nSystem Prompt (first 500 chars):`);
+      console.log(`  ${role.systemPrompt.slice(0, 500).replace(/\n/g, '\n  ')}...`);
+    }
+  });
+
+rolesCmd
+  .command('sage')
+  .description('Run the Sage advisor')
+  .argument('<query>', 'Question or request')
+  .option('--repo <owner/repo>', 'Repository context')
+  .option('--issue <number>', 'Issue number for context')
+  .option('--json', 'Output as JSON')
+  .action(async (query, opts) => {
+    try {
+      const { getOrLoadProvider } = await import('./core/providers.js');
+      const { getConfig, getTriageApiKey } = await import('./core/config.js');
+
+      const cfg = getConfig();
+      const role = getEffectiveRole('sage', cfg.roles);
+
+      if (!role) {
+        console.error('❌ Sage role is disabled or not found');
+        process.exit(1);
+      }
+
+      const apiKey = getTriageApiKey();
+
+      if (!apiKey) {
+        console.error(
+          '❌ No API key found. Set ANTHROPIC_API_KEY or configure in agentic.config.json'
+        );
+        process.exit(1);
+      }
+
+      const providerFn = await getOrLoadProvider(cfg.triage?.provider || 'anthropic', apiKey);
+      const model = providerFn(
+        role.defaultModel || cfg.triage?.model || 'claude-sonnet-4-20250514'
+      );
+
+      console.log('🔮 Sage is thinking...\n');
+
+      const result = await executeSageRole(query, model as Parameters<typeof executeSageRole>[1], {
+        role,
+      });
+
+      if (opts.json) {
+        output(result, true);
+      } else {
+        if (result.success && result.response) {
+          console.log('## 🔮 Sage Response\n');
+          console.log(result.response);
+        } else {
+          console.error(`❌ ${result.error || 'Unknown error'}`);
+          process.exit(1);
+        }
+      }
+    } catch (err) {
+      console.error('❌ Sage failed:', err instanceof Error ? err.message : err);
+      process.exit(1);
+    }
+  });
+
+rolesCmd
+  .command('match')
+  .description('Find which role matches a trigger pattern')
+  .argument('<pattern>', 'Trigger pattern (e.g., @sage, /cursor)')
+  .action((pattern) => {
+    const cfg = getConfig();
+    const role = findRoleByTrigger(pattern, cfg.roles);
+
+    if (role) {
+      console.log(`✅ Matched: ${role.icon} ${role.name} (${role.id})`);
+      console.log(`   ${role.description}`);
+    } else {
+      console.log(`❌ No role matches pattern: ${pattern}`);
+      console.log(`\nAvailable trigger patterns:`);
+      for (const r of Object.values(DEFAULT_ROLES)) {
+        for (const trigger of r.triggers) {
+          if (trigger.type === 'comment') {
+            console.log(`  ${(trigger as { pattern: string }).pattern} → ${r.icon} ${r.name}`);
+          }
+        }
+      }
     }
   });
 

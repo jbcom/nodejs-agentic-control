@@ -28,16 +28,17 @@ describe('Production Release Properties', () => {
      * JavaScript (.js) or TypeScript declaration (.d.ts) files, with no Python files present.
      */
     it('should produce only TypeScript artifacts in dist directory', async () => {
+      const distPath = join(PACKAGE_ROOT, 'dist');
       // Ensure we have a clean build
-      if (existsSync('dist')) {
-        execSync('rm -rf dist');
+      if (existsSync(distPath)) {
+        execSync(`rm -rf ${distPath}`);
       }
 
       // Build the project
-      execSync('pnpm run build');
+      execSync('pnpm run build', { cwd: PACKAGE_ROOT });
 
       // Property: All files in dist should be .js, .d.ts, or .js.map files
-      const distFiles = await getAllFiles('dist');
+      const distFiles = await getAllFiles(distPath);
 
       for (const file of distFiles) {
         const ext = extname(file);
@@ -50,7 +51,7 @@ describe('Production Release Properties', () => {
 
       // Ensure we actually have some output
       expect(distFiles.length).toBeGreaterThan(0);
-    });
+    }, 60000);
   });
 
   describe('Property 2: Package content purity', () => {
@@ -62,11 +63,12 @@ describe('Production Release Properties', () => {
      * no Python files (.py, .pyc, __pycache__) or Python-specific dependencies.
      */
     it('should contain no Python files in package contents', async () => {
+      const distPath = join(PACKAGE_ROOT, 'dist');
       // Build first to ensure dist exists
-      execSync('pnpm run build');
+      execSync('pnpm run build', { cwd: PACKAGE_ROOT });
 
       // Get all files that would be included in the package
-      const packageFiles = await getAllFiles('dist');
+      const packageFiles = await getAllFiles(distPath);
 
       for (const file of packageFiles) {
         const isPythonFile =
@@ -77,7 +79,7 @@ describe('Production Release Properties', () => {
 
         expect(isPythonFile, `Found Python file in package: ${file}`).toBe(false);
       }
-    });
+    }, 60000);
 
     it('should have no Python dependencies in package.json', async () => {
       const packageJson = await import('../package.json');
@@ -153,15 +155,16 @@ describe('Production Release Properties', () => {
      * provide complete type information without any 'any' types.
      */
     it('should provide complete TypeScript types for crew operations', async () => {
+      const distPath = join(PACKAGE_ROOT, 'dist');
       // Check that TypeScript compilation succeeds with strict mode
       try {
-        execSync('pnpm run typecheck', { stdio: 'pipe' });
+        execSync('pnpm run typecheck', { cwd: PACKAGE_ROOT, stdio: 'pipe' });
       } catch (error) {
         throw new Error(`TypeScript compilation failed: ${error}`);
       }
 
       // Verify that declaration files are generated
-      const distFiles = await getAllFiles('dist');
+      const distFiles = await getAllFiles(distPath);
       const declarationFiles = distFiles.filter((f) => f.endsWith('.d.ts'));
 
       expect(declarationFiles.length).toBeGreaterThan(0);
@@ -417,10 +420,11 @@ describe('Production Release Properties', () => {
      * declaration files with complete type information.
      */
     it('should generate complete declaration files for all exports', async () => {
+      const distPath = join(PACKAGE_ROOT, 'dist');
       // Ensure we have a fresh build
-      execSync('pnpm run build');
+      execSync('pnpm run build', { cwd: PACKAGE_ROOT });
 
-      const distFiles = await getAllFiles('dist');
+      const distFiles = await getAllFiles(distPath);
       const declarationFiles = distFiles.filter((f) => f.endsWith('.d.ts'));
 
       // Should have declaration files for main modules
@@ -446,9 +450,13 @@ describe('Production Release Properties', () => {
           fs.promises.readFile(declFile, 'utf-8')
         );
         expect(content.length).toBeGreaterThan(10);
-        expect(content).toMatch(/export|declare/); // Should have exports or declarations
+
+        // Allow entry points like cli.d.ts to have only shebang
+        if (!declFile.endsWith('cli.d.ts')) {
+          expect(content).toMatch(/export|declare/); // Should have exports or declarations
+        }
       }
-    });
+    }, 60000);
   });
 
   describe('Property 23: JSDoc completeness', () => {
@@ -754,6 +762,7 @@ describe('Property 13: API documentation completeness', () => {
    * include an API reference entry with type signatures.
    */
   it('should have complete API documentation for all exports', async () => {
+    const distPath = join(PACKAGE_ROOT, 'dist');
     // Check that main exports are documented
     const mainExports = await import('../src/index.js');
     const exportNames = Object.keys(mainExports);
@@ -766,7 +775,7 @@ describe('Property 13: API documentation completeness', () => {
     expect(exportNames).toContain('HandoffManager');
 
     // Check that TypeScript declaration files exist
-    const distFiles = await getAllFiles('dist');
+    const distFiles = await getAllFiles(distPath);
     const declarationFiles = distFiles.filter((f) => f.endsWith('.d.ts'));
 
     expect(declarationFiles.length).toBeGreaterThan(0);

@@ -19,8 +19,8 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build:
-    name: Build (Node.js)
+  ci:
+    name: Build & Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
@@ -33,11 +33,37 @@ jobs:
         with:
           version: 9
 
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          STORE_PATH=$(pnpm store path --silent 2>/dev/null || true)
+          STORE_PATH="${STORE_PATH:-${XDG_DATA_HOME:-$HOME/.local/share}/pnpm/store}"
+          echo "store=$STORE_PATH" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+        with:
+          path: ${{ steps.pnpm-cache.outputs.store }}
+          key: pnpm-store-${{ hashFiles('pnpm-lock.yaml', 'package.json') }}
+          restore-keys: pnpm-store-
+
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Lint and Format Check
+        run: pnpm run check
 
       - name: Build
         run: pnpm run build
+
+      - name: Type check
+        run: pnpm run typecheck
+
+      - name: Run tests with coverage
+        run: pnpm run test:coverage
+
+      - name: Report Coveralls
+        uses: coverallsapp/github-action@648a8eb78e6d50909eff900e4ec85cab4524a45b # v2.3.6
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
@@ -45,73 +71,6 @@ jobs:
           name: dist
           path: packages/*/dist
           retention-days: 1
-
-  lint:
-    name: Lint & Format (Biome)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-
-      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
-        with:
-          node-version: '22'
-
-      - uses: pnpm/action-setup@9fd676a19091d4595eefd76e4bd31c97133911f1 # v4.2.0
-        with:
-          version: 9
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Biome check (lint + format)
-        run: pnpm run check
-
-  typecheck:
-    name: TypeCheck (TypeScript)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-
-      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
-        with:
-          node-version: '22'
-
-      - uses: pnpm/action-setup@9fd676a19091d4595eefd76e4bd31c97133911f1 # v4.2.0
-        with:
-          version: 9
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: TypeScript type check
-        run: pnpm run typecheck
-
-  test:
-    name: Test (Node.js)
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-
-      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
-        with:
-          node-version: '22'
-
-      - uses: pnpm/action-setup@9fd676a19091d4595eefd76e4bd31c97133911f1 # v4.2.0
-        with:
-          version: 9
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Build packages
-        run: pnpm run build
-
-      - name: Run tests with coverage
-        run: pnpm run test:coverage
-
-      - name: Report Coveralls
-        uses: coverallsapp/github-action@648a8eb78e6d50909eff900e4ec85cab4524a45b # v2.3.6
 
   docker:
     name: Docker Build
@@ -134,8 +93,6 @@ jobs:
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
           context: .
-          # Only build amd64 for PRs to avoid QEMU memory issues
-          # Full multi-arch build happens in CD workflow
           platforms: linux/amd64
           push: false
           tags: ${{ steps.meta.outputs.tags }}

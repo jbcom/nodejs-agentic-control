@@ -1,0 +1,77 @@
+design_core_loop:
+  description: >
+    Design the core gameplay loop for the game.
+
+    The player is an otter. The core loop should:
+    1. Feel natural for an otter's lifestyle
+    2. Support both casual and dedicated play sessions
+    3. Work well on mobile with touch controls
+    4. Create meaningful moment-to-moment decisions
+
+    Consider loops like:
+    - Explore → Gather → Craft → Upgrade
+    - Hunt → Eat → Grow → Expand Territory
+    - Day cycle: Forage → Avoid predators → Rest
+
+    Define the primary, secondary, and meta loops.
+  expected_output: >
+    A Core Loop Design Document containing:
+    - Primary loop (moment-to-moment, 30 seconds)
+    - Secondary loop (session goals, 10-30 minutes)
+    - Meta loop (long-term progression, hours/days)
+    - How loops interconnect
+    - Mobile session length considerations
+  agent: systems_designer
+
+design_combat:
+  description: >
+    Design the combat system for an otter protagonist.
+
+    Otter combat capabilities:
+    - Bite attack (primary)
+    - Claw swipe (secondary)
+    - Dodge/roll (defensive)
+    - Dive underwater (escape)
+    - Use environment (rocks, water)
+
+    Combat philosophy:
+    - Avoid when possible, engage when necessary
+    - Size matters: can't fight a bear directly
+    - Stealth and positioning are key
+    - Water is the otter's advantage
+
+    Design for mobile touch controls.
+  expected_output: >
+    A Combat Design Document containing:
+    - Attack types and damage values
+    - Defense and dodge mechanics
+    - Enemy threat levels and engagement strategies
+    - Control scheme for mobile
+    - Combat feel guidelines (timing, feedback)
+  agent: combat_designer
+
+design_progression:
+  description: >
+    Design progression and economy systems.
+
+    Resources to manage:
+    - Food (health/stamina regeneration)
+    - Materials (crafting, nest building)
+    - Territory (safe zones, respawn points)
+    - Reputation (with other species?)
+
+    Progression elements:
+    - Otter growth/stats
+    - Abilities unlocked
+    - Territory expansion
+    - Collection/bestiary
+
+    No microtransactions - this is a premium game.
+  expected_output: >
+    A Progression Design Document containing:
+    - Resource types and acquisition methods
+    - Progression curves and milestones
+    - Unlock conditions for abilities/areas
+    - Long-term goals and completion metrics
+    - Anti-grind measures
+  agent: economy_designer

@@ -1,0 +1,82 @@
+define_world_structure:
+  description: >
+    Define the high-level structure of the game world.
+
+    Requirements:
+    - World is centered around a marsh/wetland ecosystem
+    - Player is an otter navigating this world
+    - Mobile-first design (small chunks, not overwhelming)
+    - 7 distinct biomes must connect logically
+
+    Deliverables:
+    1. World map concept (text description of layout)
+    2. Biome adjacency rules (which biomes connect)
+    3. Day/night cycle effects on gameplay
+    4. Weather system overview
+    5. World size and scale recommendations
+
+    Consider the Daggerfall Unity data mappings in shared/backend/dfu_analysis/
+    for inspiration on creature and terrain variety.
+  expected_output: >
+    A comprehensive World Structure Document in markdown format containing:
+    - World overview and theme
+    - Biome distribution map (ASCII or description)
+    - Environmental rules
+    - Scale and pacing guidelines
+    - Technical constraints for mobile (draw distance, chunk size)
+  agent: world_architect
+
+design_biomes:
+  description: >
+    Design detailed specifications for each of the 7 biomes.
+
+    Biomes to design:
+    1. Marsh (home biome - safest)
+    2. Forest (moderate difficulty)
+    3. Desert (harsh, resource-scarce)
+    4. Tundra (cold, stamina drain)
+    5. Savanna (open, predator-heavy)
+    6. Mountain (vertical, stamina-intensive)
+    7. Scrubland (transitional, mixed hazards)
+
+    For each biome, define:
+    - Visual theme and color palette
+    - Environmental hazards
+    - Available resources
+    - Native creatures
+    - Gameplay modifiers (speed, stamina, visibility)
+    - Unique mechanics or features
+
+    Reference the BiomeContract in shared/contracts/BiomeContract.ts
+  expected_output: >
+    A Biome Design Document with detailed specs for all 7 biomes,
+    formatted to match the BiomeContract TypeScript interface.
+    Include color hex codes, numerical modifiers, and resource lists.
+  agent: biome_designer
+
+create_ecosystem_rules:
+  description: >
+    Define the ecological relationships that make the world feel alive.
+
+    Design:
+    1. Food chains for each biome
+    2. Predator-prey relationships
+    3. Resource regeneration rates
+    4. Population dynamics
+    5. Cross-biome migrations
+    6. Seasonal variations
+
+    The ecosystem should create emergent gameplay where player actions
+    have consequences (overhunting affects predator populations, etc.)
+
+    Reference the SpeciesContract in shared/contracts/SpeciesContract.ts
+    and the DFU creature mappings in shared/backend/dfu_analysis/
+  expected_output: >
+    An Ecosystem Rules Document containing:
+    - Food web diagrams (text representation)
+    - Population balance formulas
+    - Resource respawn timers
+    - Migration patterns
+    - Cause-and-effect relationships
+    All designed to create engaging emergent gameplay.
+  agent: ecosystem_specialist

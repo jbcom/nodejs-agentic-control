@@ -1,0 +1,74 @@
+[project]
+name = "agentic-control-crews"
+version = "0.2.0"
+description = "CrewAI engine for agentic-control - autonomous AI crews for development tasks"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+readme = "README.md"
+authors = [{ name = "Jon Bogaty", email = "jon@jonbogaty.com" }]
+keywords = ["crewai", "ai-agents", "automation", "mcp"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+    "crewai[tools,anthropic]>=1.5.0",
+    "pyyaml>=6.0.3",
+    "pydantic>=2.12.4",
+    "vendor-connectors[meshy]>=202511.12.0",
+]
+
+[project.optional-dependencies]
+tests = [
+    "pytest>=9.0.1",
+    "pytest-mock>=3.15.1",
+    "pytest-cov>=5.0.0",
+]
+mcp = [
+    "mcp>=1.0.0",
+]
+docs = [
+    "sphinx>=7.0.0",
+    "sphinx-js>=3.2.2",
+    "sphinx-rtd-theme>=2.0.0",
+    "sphinx-autodoc-typehints>=2.0.0",
+    "myst-parser>=3.0.0",
+    "sphinxcontrib-mermaid>=0.9.2",
+]
+
+[project.scripts]
+crew-agents = "crew_agents.main:main"
+run-crew = "crew_agents.crew:kickoff"
+train-crew = "crew_agents.crew:train"
+crew-mcp = "crew_agents.mcp:main"
+
+[project.urls]
+Homepage = "https://github.com/jbcom/agentic-control"
+Repository = "https://github.com/jbcom/agentic-control"
+Documentation = "https://github.com/jbcom/agentic-control/tree/main/python#readme"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/crew_agents"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP", "B", "C4"]
+ignore = ["D", "T201"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = "-v --tb=short"

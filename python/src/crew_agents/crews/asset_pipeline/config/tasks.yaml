@@ -1,0 +1,72 @@
+create_asset_spec:
+  description: >
+    Create specification documents for required 3D assets.
+
+    Asset categories:
+    1. CREATURES: Otter, Wolf, Fox, Bear, Rabbit, Fish, etc.
+    2. ENVIRONMENT: Trees, rocks, grass clumps, water plants
+    3. PROPS: Nests, dens, food items, collectibles
+
+    For each asset, specify:
+    - Visual description (reference images conceptually)
+    - Size and scale relative to otter (0.6m long)
+    - Polygon budget (target < 5k tris per creature)
+    - Required animations
+    - LOD requirements
+    - Texture resolution (512x512 or 1024x1024)
+
+    Reference species designs from creature design docs.
+  expected_output: >
+    Asset Specification Document with detailed requirements
+    for each asset type, organized by priority.
+  agent: asset_director
+
+generate_prompts:
+  description: >
+    Generate optimized Meshy prompts for each asset.
+
+    Prompt structure for creatures:
+    "A realistic [species], quadruped, [pose], detailed fur/scales texture,
+    game asset style, low poly optimized, neutral pose for animation"
+
+    Prompt structure for environment:
+    "[Object type], stylized nature game asset, hand-painted texture style,
+    optimized geometry, [biome] environment"
+
+    Generate prompts for priority assets:
+    1. River Otter (player character)
+    2. Wolf (primary predator)
+    3. Rabbit (prey)
+    4. Fish (food source)
+    5. Trees (forest biome)
+
+    Include retexture prompts for color variants.
+  expected_output: >
+    Prompt Library Document with:
+    - Primary prompts for each asset
+    - Retexture variation prompts
+    - Negative prompt suggestions
+    - Expected quality settings
+  agent: prompt_engineer
+
+define_qa_criteria:
+  description: >
+    Define quality assessment criteria for generated assets.
+
+    Quality dimensions:
+    1. Visual quality (texture clarity, color accuracy)
+    2. Technical quality (topology, UV mapping)
+    3. Style consistency (fits game aesthetic)
+    4. Animation readiness (proper rigging points)
+    5. Performance (polygon count, texture size)
+
+    Create a scoring rubric (1-10) for each dimension.
+    Define minimum passing scores.
+    Document common issues and how to identify them.
+  expected_output: >
+    Asset QA Rubric with:
+    - Scoring criteria for each dimension
+    - Pass/fail thresholds
+    - Common issue checklist
+    - Regeneration triggers (when to reject and redo)
+  agent: asset_qa

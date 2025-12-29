@@ -1,0 +1,69 @@
+create_water_shader:
+  description: >
+    Create the water/marsh shader system.
+
+    Requirements:
+    - Gerstner waves for realistic water movement
+    - Caustics projection on underwater objects
+    - Depth-based color (shallow turquoise to deep blue)
+    - Foam at edges and disturbances
+    - Reflections (simplified for mobile)
+
+    Follow patterns in .ruler/shaders.md
+    Reference existing AdvancedWater.tsx component
+
+    Budget: < 100 shader instructions per pixel
+  expected_output: >
+    Water shader code (GLSL vertex + fragment) with:
+    - Commented code explaining each section
+    - Uniform declarations with descriptions
+    - R3F integration code (shaderMaterial)
+    - Mobile optimization notes
+  agent: shader_engineer
+
+build_terrain_system:
+  description: >
+    Build the procedural terrain system.
+
+    Requirements:
+    - Biome-based terrain generation
+    - Smooth transitions between biomes
+    - Height-based texturing
+    - Instanced grass/reeds
+    - LOD system for distance
+
+    Reference existing MarshlandTerrain.tsx
+    Target: < 50k vertices visible at once
+  expected_output: >
+    Terrain system code including:
+    - Height generation functions
+    - Biome blending logic
+    - Grass instancing setup
+    - LOD configuration
+  agent: r3f_specialist
+
+optimize_rendering:
+  description: >
+    Optimize the rendering pipeline for 60fps mobile.
+
+    Performance budget:
+    - Draw calls: < 100 per frame
+    - Vertices: < 500k per frame
+    - Texture memory: < 200MB total
+    - Shader instructions: < 200 per pixel
+
+    Techniques to apply:
+    - Frustum culling
+    - LOD (Detailed component from drei)
+    - Instancing (Instances from drei)
+    - Texture atlasing
+    - Conditional quality settings
+
+    Profile with r3f-perf and document results.
+  expected_output: >
+    Optimization Report containing:
+    - Current performance metrics
+    - Identified bottlenecks
+    - Applied optimizations with before/after
+    - Remaining issues and recommendations
+  agent: performance_engineer

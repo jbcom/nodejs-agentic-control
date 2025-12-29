@@ -37,8 +37,9 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
+    "build": "tsup",
+    "build:types": "tsc --emitDeclarationOnly",
+    "dev": "tsup --watch",
     "test": "vitest",
     "lint": "biome lint src/",
     "lint:fix": "biome lint --write src/",
@@ -50,10 +51,14 @@
     "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
+    "@ai-sdk/mcp": ">=1.0.0",
+    "@modelcontextprotocol/sdk": ">=1.0.0",
+    "ai": ">=5.0.0",
     "vitest": ">=1.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",
+    "tsup": "^8.5.0",
     "typescript": "^5.7.0",
     "vitest": "^4.0.14"
   },

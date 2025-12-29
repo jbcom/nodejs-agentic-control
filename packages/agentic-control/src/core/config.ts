@@ -29,6 +29,7 @@
  */
 
 import { cosmiconfigSync } from 'cosmiconfig';
+import type { RolesConfig } from '../roles/types.js';
 import { setTokenConfig } from './tokens.js';
 import type { TokenConfig } from './types.js';
 import { validateConfig } from './validation.js';
@@ -117,6 +118,9 @@ export interface AgenticConfig {
 
   /** MCP server configuration */
   mcp?: MCPConfig;
+
+  /** Roles configuration */
+  roles?: RolesConfig;
 }
 
 // ============================================

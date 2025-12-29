@@ -1,0 +1,72 @@
+write_code_task:
+  description: >
+    You will write TypeScript/TSX code for the game based on this specification:
+
+    SPECIFICATION:
+    {component_spec}
+
+    TARGET DIRECTORY:
+    {target_directory}
+
+    INSTRUCTIONS:
+    1. First, use the Directory List tool to see existing files in the target directory
+    2. Use the Read Game Code File tool to read 2-3 similar existing files to understand patterns
+    3. Write the new code following the EXACT patterns you observed
+    4. Use the Write Game Code File tool to save the file
+
+    REQUIREMENTS:
+    - Follow existing naming conventions
+    - Use proper TypeScript types (no 'any')
+    - Import from correct paths (check existing files)
+    - Include JSDoc comments for public interfaces
+    - Match the code style exactly (semicolons, quotes, etc.)
+
+  expected_output: >
+    The complete TypeScript/TSX code that has been written to a file.
+    Include the file path and a summary of what was created.
+
+review_code_task:
+  description: >
+    Review the code that was just written for errors and issues.
+
+    SPECIFICATION:
+    {component_spec}
+
+    TARGET DIRECTORY:
+    {target_directory}
+
+    Use the Read Game Code File tool to read:
+    1. The newly written file
+    2. Files it imports from
+    3. Similar existing files for comparison
+
+    CHECK FOR:
+    - TypeScript compilation errors (missing types, wrong imports)
+    - Deviations from project conventions
+    - Missing exports that other files might need
+    - Performance issues (unnecessary renders, missing memo)
+    - Logic errors in game mechanics
+
+    If you find issues, provide the CORRECTED code.
+
+  expected_output: >
+    Either:
+    - "APPROVED: Code review passed with no issues" OR
+    - "ISSUES FOUND:" followed by the corrected code and explanation
+
+evaluate_code_task:
+  description: >
+    Final evaluation of the code to ensure it meets the original requirement.
+
+    ORIGINAL SPECIFICATION:
+    {component_spec}
+
+    Verify:
+    1. The code fulfills ALL requirements from the specification
+    2. It follows the architecture patterns from the knowledge base
+    3. It will integrate cleanly with existing game code
+    4. No breaking changes to existing functionality
+
+  expected_output: >
+    Final code that is ready for production. If QA found issues, ensure
+    those corrections are included. Output the complete, final code.

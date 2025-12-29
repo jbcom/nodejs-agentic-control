@@ -25,3 +25,8 @@ coverage/
 .DS_Store
 
 node-compile-cache/
+
+# Repositories
+otterfall/
+game-generator/
+python/
