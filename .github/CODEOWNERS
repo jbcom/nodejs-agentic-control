@@ -1,12 +1,4 @@
-# Default code owners for all files
-* @jbdevprimary
+# Organization-wide Code Owners
+# Managed by agentic-dev-library/control-center
 
-# GitHub Actions and CI/CD
-/.github/ @jbdevprimary
-
-# Cursor rules and agent configuration
-/.cursor/ @jbdevprimary
-
-# Documentation
-/docs/ @jbdevprimary
-*.md @jbdevprimary
+* @agentic-dev-library/maintainers
