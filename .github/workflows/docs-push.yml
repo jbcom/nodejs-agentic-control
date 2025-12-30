@@ -1,0 +1,100 @@
+name: Push Documentation
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-push:
+    name: Build & Push Docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect Project Type
+        id: detect
+        run: |
+          if [ -f "pyproject.toml" ]; then
+            echo "type=python" >> $GITHUB_OUTPUT
+          elif [ -f "Cargo.toml" ]; then
+            echo "type=rust" >> $GITHUB_OUTPUT
+          elif [ -f "package.json" ]; then
+            echo "type=nodejs" >> $GITHUB_OUTPUT
+          else
+            echo "type=unknown" >> $GITHUB_OUTPUT
+          fi
+
+      # -----------------------------------------------------------------------
+      # Build Documentation
+      # -----------------------------------------------------------------------
+
+      # Python (Sphinx)
+      - name: Setup Python
+        if: steps.detect.outputs.type == 'python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install uv
+        if: steps.detect.outputs.type == 'python'
+        run: pip install uv
+      - name: Build Python Docs
+        if: steps.detect.outputs.type == 'python'
+        run: |
+          uv sync --extra docs
+          cd docs && uv run sphinx-build -b markdown . _build/markdown
+
+      # Node.js (TypeDoc)
+      - name: Setup Node
+        if: steps.detect.outputs.type == 'nodejs'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Build Node Docs
+        if: steps.detect.outputs.type == 'nodejs'
+        run: |
+          npm install -g typedoc typedoc-plugin-markdown
+          typedoc --plugin typedoc-plugin-markdown --out docs/_build/markdown
+
+      # Rust (Rustdoc)
+      - name: Setup Rust
+        if: steps.detect.outputs.type == 'rust'
+        uses: dtolnay/rust-toolchain@stable
+      - name: Build Rust Docs
+        if: steps.detect.outputs.type == 'rust'
+        run: |
+          cargo doc --no-deps
+          # Note: Converting rustdoc to markdown is tricky, usually we just push the README or use a generator
+          mkdir -p docs/_build/markdown
+          cp README.md docs/_build/markdown/index.md
+
+      # -----------------------------------------------------------------------
+      # Push to Org Docs Repo
+      # -----------------------------------------------------------------------
+      - name: Push to Org Docs
+        env:
+          GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+        run: |
+          REPO_NAME=$(echo "${{ github.repository }}" | cut -d'/' -f2)
+          git clone https://x-access-token:${GH_TOKEN}@github.com/agentic-dev-library/agentic-dev-library.github.io.git /tmp/docs-repo
+          
+          TARGET_DIR="/tmp/docs-repo/src/content/docs/packages/${REPO_NAME}"
+          mkdir -p "${TARGET_DIR}"
+          
+          if [ -d "docs/_build/markdown" ]; then
+            cp -r docs/_build/markdown/* "${TARGET_DIR}/"
+          else
+            # Fallback to just pushing README if no docs built
+            cp README.md "${TARGET_DIR}/index.md"
+          fi
+          
+          cd /tmp/docs-repo
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "docs: update documentation for ${REPO_NAME} from ${GITHUB_SHA::7}" || exit 0
+          git push origin main
