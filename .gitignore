@@ -1,27 +1,31 @@
-# Build output
-dist/
+# Standard .gitignore for all projects
+# Managed by agentic-dev-library/control-center
 
-# Documentation build
-docs/_build/
-docs/api/python/_autosummary/
-
-# Biome cache
-.biome/
-
-# Dependencies
-node_modules/
-
-# npm lockfile (project uses pnpm)
-package-lock.json
-
-# Test coverage
-coverage/
-
-# IDE
+# IDEs
 .idea/
 .vscode/
+*.swp
+*.swo
 
 # OS
 .DS_Store
+Thumbs.db
 
-node-compile-cache/
+# Environments
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# AI / Agents
+memory-bank/
+.cursor/
+! .cursor/rules/
+! .cursor/Dockerfile
+! .cursor/environment.json
+! .cursor/mcp.json
