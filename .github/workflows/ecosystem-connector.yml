@@ -116,7 +116,7 @@ jobs:
       github.event.workflow_run.conclusion == 'failure'
     uses: jbcom/control-center/.github/workflows/ecosystem-fixer.yml@main
     with:
-      run_id: ${{ github.event.workflow_run.id }}
+      run_id: ${{ toJSON(github.event.workflow_run.id) }}
       repository: ${{ github.repository }}
       branch: ${{ github.event.workflow_run.head_branch }}
     secrets:
