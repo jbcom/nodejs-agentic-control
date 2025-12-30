@@ -1,30 +1,12 @@
-# Ecosystem Connector Workflow
-# 
-# This workflow connects this repository back to jbcom/control-center
-# for unified AI-powered automation across all organization repositories.
-#
-# Features:
-# - Automatic PR review via AI (Ollama → Claude escalation)
-# - /jules and /cursor command delegation
-# - @claude interactive assistance
-# - CI failure auto-fix
-#
-# Synced from: jbcom/control-center/repository-files/always-sync
-
 name: Ecosystem Connector
 
 on:
-  # PR events - trigger AI review
   pull_request:
     types: [opened, synchronize, ready_for_review]
-
-  # Issue/PR comments - handle delegation commands
   issue_comment:
     types: [created]
-
-  # CI failures - trigger auto-fix
   workflow_run:
-    workflows: ["CI", "Build", "Test", "Lint"]
+    workflows: ["CI"]
     types: [completed]
     branches-ignore: [main, master]
 
@@ -35,15 +17,9 @@ permissions:
   actions: read
 
 jobs:
-  # ==========================================================================
-  # AI PR REVIEW
-  # Calls control-center's ecosystem-orchestrator for tiered AI review
-  # ==========================================================================
   review:
     name: AI Review
-    if: |
-      github.event_name == 'pull_request' && 
-      github.event.pull_request.draft == false
+    if: github.event_name == 'pull_request' && !github.event.pull_request.draft
     uses: jbcom/control-center/.github/workflows/ecosystem-orchestrator.yml@main
     with:
       action: review
@@ -53,17 +29,12 @@ jobs:
       CI_GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       GOOGLE_JULES_API_KEY: ${{ secrets.GOOGLE_JULES_API_KEY }}
-      OLLAMA_API_KEY: ${{ secrets.OLLAMA_API_KEY }}
       CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
 
-  # ==========================================================================
-  # DELEGATION: /jules and /cursor commands
-  # ==========================================================================
   delegate:
     name: Delegate Command
     if: |
       github.event_name == 'issue_comment' &&
-      github.event.issue.pull_request == null &&
       (contains(github.event.comment.body, '/jules') || 
        contains(github.event.comment.body, '/cursor') ||
        contains(github.event.comment.body, '@claude'))
@@ -82,38 +53,9 @@ jobs:
       GOOGLE_JULES_API_KEY: ${{ secrets.GOOGLE_JULES_API_KEY }}
       CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
 
-  # ==========================================================================
-  # @claude on PRs (interactive)
-  # ==========================================================================
-  claude-pr:
-    name: Claude (PR)
-    if: |
-      github.event_name == 'issue_comment' &&
-      github.event.issue.pull_request != null &&
-      contains(github.event.comment.body, '@claude')
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.CI_GITHUB_TOKEN }}
-
-      - name: Run Claude
-        uses: anthropics/claude-code-action@main
-        with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          github_token: ${{ secrets.CI_GITHUB_TOKEN }}
-          allowed_bots: "google-labs-jules[bot],copilot-swe-agent[bot],dependabot[bot],renovate[bot],github-actions[bot],cursor[bot]"
-          allowed_tools: "Edit,Write,Read,Glob,Grep,LS,Bash(git status),Bash(git diff),Bash(git add),Bash(git commit),Bash(git push),Bash(gh pr view),Bash(gh pr list)"
-
-  # ==========================================================================
-  # CI FAILURE AUTO-FIX
-  # ==========================================================================
   fix-ci:
     name: Auto-fix CI
-    if: |
-      github.event_name == 'workflow_run' &&
-      github.event.workflow_run.conclusion == 'failure'
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'failure'
     uses: jbcom/control-center/.github/workflows/ecosystem-fixer.yml@main
     with:
       run_id: ${{ github.event.workflow_run.id }}
