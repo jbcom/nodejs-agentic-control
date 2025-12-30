@@ -1,73 +1,33 @@
-# Dependabot Configuration
-# 
-# DIRECT PUSH MODE: Dependabot pushes directly to main (no PRs)
-# Branch rulesets allow Dependabot to bypass protections
-#
-# Dependabot ignores ecosystems that don't apply to your repo
-
 version: 2
-
 updates:
-  # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
-    commit-message:
-      prefix: "ci"
-
-  # Docker
-  - package-ecosystem: "docker"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    commit-message:
-      prefix: "build"
-
-  # NPM/Node.js
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    commit-message:
-      prefix: "deps"
-
-  # Python/pip
+  
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
-    commit-message:
-      prefix: "deps"
+    groups:
+      python-dependencies:
+        patterns:
+          - "*"
 
-  # Go modules
-  - package-ecosystem: "gomod"
+  - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
-    commit-message:
-      prefix: "deps"
+    groups:
+      node-dependencies:
+        patterns:
+          - "*"
 
-  # Rust/Cargo
   - package-ecosystem: "cargo"
     directory: "/"
     schedule:
       interval: "weekly"
-    commit-message:
-      prefix: "deps"
-
-  # Terraform
-  - package-ecosystem: "terraform"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    commit-message:
-      prefix: "deps"
-
-  # Git submodules
-  - package-ecosystem: "gitsubmodule"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    commit-message:
-      prefix: "deps"
+    groups:
+      rust-dependencies:
+        patterns:
+          - "*"
