@@ -1,0 +1,233 @@
+name: Ecosystem Fixer
+
+# CI Failure Resolution Pipeline
+# 
+# Uses Ollama GLM 4.6 Cloud for cost-efficient, fast auto-fix suggestions.
+# Combined with CodeQL and Copilot suggestions for comprehensive fixes.
+#
+# Pattern: API analysis → Ollama suggestion → PR comment
+
+on:
+  workflow_run:
+    workflows: ["CI", "Build", "Test", "Lint"]
+    types: [completed]
+    branches-ignore: [main]
+  
+  workflow_call:
+    inputs:
+      run_id:
+        description: 'Workflow run ID that failed'
+        required: true
+        type: string
+      repository:
+        description: 'Repository owner/name'
+        required: true
+        type: string
+      branch:
+        description: 'Branch name'
+        required: true
+        type: string
+    secrets:
+      CI_GITHUB_TOKEN:
+        required: true
+      OLLAMA_API_KEY:
+        required: false
+
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'Workflow run ID'
+        required: true
+        type: string
+      repository:
+        description: 'Repository'
+        required: true
+        type: string
+      branch:
+        description: 'Branch'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: write
+  actions: read
+  issues: write
+
+env:
+  OLLAMA_HOST: https://ollama.com
+  OLLAMA_MODEL: glm-4.6:cloud
+
+jobs:
+  # ════════════════════════════════════════════════════════════════
+  # ANALYZE: Extract failure context via API
+  # ════════════════════════════════════════════════════════════════
+  analyze:
+    name: Analyze Failure
+    if: |
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'failure') ||
+      github.event_name == 'workflow_call' ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    outputs:
+      is_fork: ${{ steps.context.outputs.is_fork }}
+      pr_number: ${{ steps.context.outputs.pr_number }}
+      failure_log: ${{ steps.context.outputs.failure_log }}
+      target_repo: ${{ steps.context.outputs.target_repo }}
+      target_branch: ${{ steps.context.outputs.target_branch }}
+    steps:
+      - name: Extract failure context via API
+        id: context
+        env:
+          GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+          INPUT_REPO: ${{ inputs.repository || github.repository }}
+          INPUT_BRANCH: ${{ inputs.branch || github.event.workflow_run.head_branch }}
+          INPUT_RUN_ID: ${{ inputs.run_id || github.event.workflow_run.id }}
+          EVENT_NAME: ${{ github.event_name }}
+          HEAD_REPO: ${{ github.event.workflow_run.head_repository.full_name }}
+          BASE_REPO: ${{ github.event.workflow_run.repository.full_name }}
+        run: |
+          # Resolve target (via env vars to prevent code injection)
+          TARGET_REPO="$INPUT_REPO"
+          TARGET_BRANCH="$INPUT_BRANCH"
+          TARGET_RUN_ID="$INPUT_RUN_ID"
+          
+          echo "target_repo=$TARGET_REPO" >> $GITHUB_OUTPUT
+          echo "target_branch=$TARGET_BRANCH" >> $GITHUB_OUTPUT
+          
+          # Security: Check if fork PR (using env vars to prevent code injection)
+          if [ "$EVENT_NAME" = "workflow_run" ]; then
+            if [ "$HEAD_REPO" != "$BASE_REPO" ]; then
+              echo "⚠️ Fork PR detected"
+              echo "is_fork=true" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+          fi
+          echo "is_fork=false" >> $GITHUB_OUTPUT
+          
+          # Get PR number
+          PR_NUM=$(gh pr list --repo "$TARGET_REPO" --head "$TARGET_BRANCH" --json number --jq '.[0].number // empty' 2>/dev/null || echo "")
+          echo "pr_number=$PR_NUM" >> $GITHUB_OUTPUT
+          
+          # Get failure logs (truncated for Ollama context window)
+          echo "📋 Fetching failure logs..."
+          LOGS=$(gh run view "$TARGET_RUN_ID" --repo "$TARGET_REPO" --log-failed 2>&1 | tail -300 || echo "Could not fetch logs")
+          
+          # Save to file for artifact
+          echo "$LOGS" > /tmp/failure.log
+          echo "failure_log=/tmp/failure.log" >> $GITHUB_OUTPUT
+
+      - name: Upload failure log
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-log
+          path: /tmp/failure.log
+          retention-days: 1
+
+  # ════════════════════════════════════════════════════════════════
+  # FIX: Query Ollama GLM 4.6 for fix suggestions
+  # ════════════════════════════════════════════════════════════════
+  suggest-fix:
+    name: Suggest Fix (Ollama)
+    needs: analyze
+    if: |
+      needs.analyze.outputs.is_fork != 'true' &&
+      needs.analyze.outputs.pr_number != ''
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download failure log
+        uses: actions/download-artifact@v4
+        with:
+          name: failure-log
+          path: /tmp
+
+      - name: Query Ollama for fix
+        env:
+          OLLAMA_API_KEY: ${{ secrets.OLLAMA_API_KEY }}
+          GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+          TARGET_REPO: ${{ needs.analyze.outputs.target_repo }}
+          TARGET_BRANCH: ${{ needs.analyze.outputs.target_branch }}
+          PR_NUM: ${{ needs.analyze.outputs.pr_number }}
+        run: |
+          if [ -z "$OLLAMA_API_KEY" ]; then
+            echo "⚠️ No OLLAMA_API_KEY configured"
+            exit 0
+          fi
+          
+          FAILURE_LOG=$(head -200 /tmp/failure.log)
+          
+          # Build prompt using heredoc
+          PROMPT=$(cat <<PROMPT_EOF
+          You are a CI failure analyzer. Analyze this failure log and provide a fix suggestion.
+          
+          FAILURE LOG:
+          $FAILURE_LOG
+          
+          Provide:
+          1. Root cause (1-2 sentences)
+          2. Suggested fix (specific code changes if possible)
+          3. Commands to verify the fix
+          
+          Be concise. Focus on the actual error, not warnings.
+          PROMPT_EOF
+          )
+
+          echo "🤖 Querying Ollama GLM 4.6..."
+          
+          RESPONSE=$(curl -sf "${{ env.OLLAMA_HOST }}/api/chat" \
+            -H "Authorization: Bearer $OLLAMA_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "$(jq -n \
+              --arg model "${{ env.OLLAMA_MODEL }}" \
+              --arg prompt "$PROMPT" \
+              '{
+                model: $model,
+                messages: [{"role": "user", "content": $prompt}],
+                stream: false
+              }')" 2>&1) || RESPONSE=""
+          
+          if [ -z "$RESPONSE" ]; then
+            echo "⚠️ Ollama API call failed"
+            SUGGESTION="_(Auto-fix analysis unavailable. Please review the CI logs manually.)_"
+          else
+            SUGGESTION=$(echo "$RESPONSE" | jq -r '.message.content // "No suggestion generated"')
+          fi
+          
+          # Post suggestion to PR
+          COMMENT_BODY=$(cat <<COMMENT_EOF
+          ## 🔧 CI Fix Suggestion
+          
+          **Branch:** $TARGET_BRANCH
+          
+          $SUGGESTION
+          
+          ---
+          <sub>🤖 Generated by Ecosystem Fixer using Ollama GLM 4.6</sub>
+          COMMENT_EOF
+          )
+          
+          gh pr comment "$PR_NUM" --repo "$TARGET_REPO" --body "$COMMENT_BODY"
+          echo "✅ Posted fix suggestion to PR #$PR_NUM"
+
+  # ════════════════════════════════════════════════════════════════
+  # NOTIFY: Report status for fork PRs
+  # ════════════════════════════════════════════════════════════════
+  notify-fork:
+    name: Notify Fork PR
+    needs: analyze
+    if: needs.analyze.outputs.is_fork == 'true' && needs.analyze.outputs.pr_number != ''
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post notice
+        env:
+          GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+          TARGET_REPO: ${{ needs.analyze.outputs.target_repo }}
+          PR_NUM: ${{ needs.analyze.outputs.pr_number }}
+        run: |
+          gh pr comment "$PR_NUM" --repo "$TARGET_REPO" --body "$(cat <<'EOF'
+          ⚠️ **Auto-fix unavailable for fork PRs**
+          
+          For security reasons, automatic CI fixes are disabled for fork PRs.
+          Please fix the CI failure manually.
+          EOF
+          )"
