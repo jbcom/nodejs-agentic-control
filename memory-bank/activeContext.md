@@ -63,3 +63,9 @@ pnpm tsx scripts/sync-versions.ts
 
 ---
 *Release maintenance & monitoring implemented: 2025-12-24*
+## Session: 2025-12-31
+- Fixed Docker build hang by updating Dockerfile to use pnpm@9 and --no-frozen-lockfile.
+- Added build-essential to Docker image for git dependencies.
+- Updated Dockerfile to install local Python package instead of missing remote one.
+- Updated root package.json repository URLs to match subpackages.
+- Added Python tests to CI workflow.

@@ -951,7 +951,8 @@ rolesCmd
   .description('List available roles')
   .option('--json', 'Output as JSON')
   .action((opts) => {
-    const roles = listRoles();
+    const cfg = getConfig();
+    const roles = listRoles(cfg.roles);
 
     if (opts.json) {
       output(roles, true);
@@ -966,7 +967,9 @@ rolesCmd
         console.log(`${role.icon} ${role.name} (${role.id})`);
         console.log(`   ${role.description}`);
         console.log(`   Triggers: ${triggers || 'manual only'}`);
-        console.log(`   Capabilities: ${role.capabilities.slice(0, 3).join(', ')}${role.capabilities.length > 3 ? '...' : ''}`);
+        console.log(
+          `   Capabilities: ${role.capabilities.slice(0, 3).join(', ')}${role.capabilities.length > 3 ? '...' : ''}`
+        );
         console.log();
       }
     }
@@ -978,7 +981,8 @@ rolesCmd
   .argument('<role-id>', 'Role ID (sage, harvester, curator, reviewer, fixer, delegator)')
   .option('--json', 'Output as JSON')
   .action((roleId, opts) => {
-    const role = getEffectiveRole(roleId);
+    const cfg = getConfig();
+    const role = getEffectiveRole(roleId, cfg.roles);
 
     if (!role) {
       console.error(`❌ Role not found: ${roleId}`);
@@ -1029,22 +1033,35 @@ rolesCmd
   .action(async (query, opts) => {
     try {
       const { getOrLoadProvider } = await import('./core/providers.js');
-      const { getTriageConfig, getTriageApiKey } = await import('./core/config.js');
+      const { getConfig, getTriageApiKey } = await import('./core/config.js');
 
-      const triageConfig = getTriageConfig();
-      const apiKey = getTriageApiKey();
+      const cfg = getConfig();
+      const role = getEffectiveRole('sage', cfg.roles);
 
-      if (!apiKey) {
-        console.error('❌ No API key found. Set ANTHROPIC_API_KEY or configure in agentic.config.json');
+      if (!role) {
+        console.error('❌ Sage role is disabled or not found');
         process.exit(1);
       }
 
-      const providerFn = await getOrLoadProvider(triageConfig.provider || 'anthropic', apiKey);
-      const model = providerFn(triageConfig.model || 'claude-sonnet-4-20250514');
+      const apiKey = getTriageApiKey();
+
+      if (!apiKey) {
+        console.error(
+          '❌ No API key found. Set ANTHROPIC_API_KEY or configure in agentic.config.json'
+        );
+        process.exit(1);
+      }
+
+      const providerFn = await getOrLoadProvider(cfg.triage?.provider || 'anthropic', apiKey);
+      const model = providerFn(
+        role.defaultModel || cfg.triage?.model || 'claude-sonnet-4-20250514'
+      );
 
       console.log('🔮 Sage is thinking...\n');
 
-      const result = await executeSageRole(query, model as Parameters<typeof executeSageRole>[1]);
+      const result = await executeSageRole(query, model as Parameters<typeof executeSageRole>[1], {
+        role,
+      });
 
       if (opts.json) {
         output(result, true);
@@ -1068,7 +1085,8 @@ rolesCmd
   .description('Find which role matches a trigger pattern')
   .argument('<pattern>', 'Trigger pattern (e.g., @sage, /cursor)')
   .action((pattern) => {
-    const role = findRoleByTrigger(pattern);
+    const cfg = getConfig();
+    const role = findRoleByTrigger(pattern, cfg.roles);
 
     if (role) {
       console.log(`✅ Matched: ${role.icon} ${role.name} (${role.id})`);

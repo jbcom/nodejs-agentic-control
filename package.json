@@ -67,10 +67,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jbdevprimary/agentic-control.git"
+    "url": "https://github.com/agentic-dev-library/control.git"
   },
-  "homepage": "https://github.com/jbdevprimary/agentic-control#readme",
+  "homepage": "https://agentic-dev-library.github.io/packages/control/",
   "bugs": {
-    "url": "https://github.com/jbdevprimary/agentic-control/issues"
+    "url": "https://github.com/agentic-dev-library/control/issues"
   }
 }

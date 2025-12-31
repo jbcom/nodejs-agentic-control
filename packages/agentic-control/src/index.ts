@@ -41,16 +41,13 @@ export { HandoffManager, type TakeoverOptions } from './handoff/index.js';
 export * from './orchestrators/index.js';
 // Pipeline automation - CI resolution, PR lifecycle
 export * from './pipelines/index.js';
-
+// Roles - Configurable AI agent personas
+export * from './roles/index.js';
 // Sandbox execution
 export type { ContainerConfig, ContainerResult, SandboxOptions } from './sandbox/index.js';
 export { ContainerManager, SandboxExecutor } from './sandbox/index.js';
-
 // AI Triage
 export { AIAnalyzer, type AIAnalyzerOptions } from './triage/index.js';
-
-// Roles - Configurable AI agent personas
-export * from './roles/index.js';
 
 // Version - read from package.json at runtime
 import { createRequire } from 'node:module';

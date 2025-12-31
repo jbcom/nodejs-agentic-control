@@ -15,38 +15,36 @@
  * ```
  */
 
-// Types
-export type {
-    AgentCapability,
-    BuiltInRoleId,
-    RoleConfig,
-    RoleDefinition,
-    RoleExecutionContext,
-    RoleExecutionResult,
-    RolesConfig,
-    RoleTrigger,
-} from './types.js';
-
 // Default roles
 export {
-    CURATOR_ROLE,
-    DEFAULT_ROLES,
-    DELEGATOR_ROLE,
-    FIXER_ROLE,
-    getDefaultRole,
-    getDefaultRoleIds,
-    HARVESTER_ROLE,
-    REVIEWER_ROLE,
-    SAGE_ROLE,
+  CURATOR_ROLE,
+  DEFAULT_ROLES,
+  DELEGATOR_ROLE,
+  FIXER_ROLE,
+  getDefaultRole,
+  getDefaultRoleIds,
+  HARVESTER_ROLE,
+  REVIEWER_ROLE,
+  SAGE_ROLE,
 } from './defaults.js';
-
 // Executor
 export {
-    applyRoleConfig,
-    executeRole,
-    executeSageRole,
-    findRoleByTrigger,
-    getEffectiveRole,
-    listRoles,
-    roleHasCapability,
+  applyRoleConfig,
+  executeRole,
+  executeSageRole,
+  findRoleByTrigger,
+  getEffectiveRole,
+  listRoles,
+  roleHasCapability,
 } from './executor.js';
+// Types
+export type {
+  AgentCapability,
+  BuiltInRoleId,
+  RoleConfig,
+  RoleDefinition,
+  RoleExecutionContext,
+  RoleExecutionResult,
+  RolesConfig,
+  RoleTrigger,
+} from './types.js';

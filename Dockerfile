@@ -26,6 +26,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     jq \
     ca-certificates \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 # Install GitHub CLI
@@ -40,48 +41,42 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | \
 # Install uv (fast Python package manager)
 RUN pip install --no-cache-dir uv
 
-# Install pnpm (fast Node.js package manager)
-RUN npm install -g pnpm
+# Install pnpm (match CI version)
+RUN npm install -g pnpm@9
 
 # Create non-root user for security
 RUN useradd -m -u 1000 -s /bin/bash agent
 USER agent
 WORKDIR /home/agent
 
-# =============================================================================
-# Install agentic-crew with AI framework support
-# =============================================================================
-
-# Install agentic-crew with CrewAI (most common framework)
-# Users can install additional frameworks via: pip install agentic-crew[langgraph,strands]
-RUN pip install --user --no-cache-dir "agentic-crew[crewai]"
-
-# =============================================================================
-# Install agentic-control (TypeScript control plane) - built from source
-# =============================================================================
-
 # Setup pnpm for global installs (required for pnpm v9+)
-# Modern pnpm versions do not create a global bin directory by default.
-# We set PNPM_HOME and create the directory manually since `pnpm setup`
-# requires interactive shell configuration which doesn't work in Docker.
-# This ensures cross-platform compatibility and is critical for:
-# - GitHub Actions Marketplace workflows
-# - Multi-architecture Docker builds (linux/amd64, linux/arm64)
-# - Local Docker image execution with global CLI access
 ENV PNPM_HOME="/home/agent/.local/share/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN mkdir -p "$PNPM_HOME" && echo "pnpm directory created successfully"
+RUN mkdir -p "$PNPM_HOME"
 
-# Copy package files for dependency installation
+# =============================================================================
+# Install Python dependencies (agentic-control-crews)
+# =============================================================================
+
+# Copy Python code
+COPY --chown=agent:agent python/ ./python/
+
+# Install the Python package locally
+RUN pip install --user --no-cache-dir "./python[crewai]"
+
+# =============================================================================
+# Install agentic-control (TypeScript control plane)
+# =============================================================================
+
+# Copy workspace files
 COPY --chown=agent:agent package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY --chown=agent:agent packages/agentic-control/package.json ./packages/agentic-control/
 COPY --chown=agent:agent packages/providers/package.json ./packages/providers/
 COPY --chown=agent:agent packages/vitest-agentic-control/package.json ./packages/vitest-agentic-control/
 COPY --chown=agent:agent scripts/ ./scripts/
 
-# Install all dependencies (including devDependencies for AI SDK providers)
-# Note: devDependencies include @ai-sdk/anthropic which is needed at runtime
-RUN pnpm install --frozen-lockfile
+# Install dependencies (use --no-frozen-lockfile to match CI and handle any drift)
+RUN pnpm install --no-frozen-lockfile
 
 # Copy source code and build
 COPY --chown=agent:agent packages/ ./packages/
@@ -101,38 +96,16 @@ RUN node /home/agent/packages/agentic-control/dist/cli.js --version || echo "CLI
 # Environment setup
 # =============================================================================
 
-# Add user local bin to PATH for agentic-crew CLI
-# Note: PNPM_HOME is already in PATH from earlier setup
+# Add user local bin to PATH for Python CLIs
 ENV PATH="/home/agent/.local/bin:${PATH}"
 
 # Default working directory for agent tasks
 WORKDIR /workspace
 
-# Verify installation (use absolute paths since WORKDIR changed)
-RUN /home/agent/.local/bin/agentic-crew --help && \
+# Verify installation
+RUN /home/agent/.local/bin/crew-agents --help && \
     node /home/agent/packages/agentic-control/dist/cli.js --help
 
 # Entry point: agentic-control CLI
 ENTRYPOINT ["node", "/home/agent/packages/agentic-control/dist/cli.js"]
 CMD ["--help"]
-
-# =============================================================================
-# Usage Examples:
-# =============================================================================
-#
-# Build:
-#   docker build -t agentic-control .
-#
-# Run fleet status:
-#   docker run --rm agentic-control fleet status
-#
-# Run a crew (requires mounting workspace and setting API keys):
-#   docker run --rm \
-#     -v $(pwd):/workspace \
-#     -e ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY \
-#     agentic-control sandbox run --image agentic-control "Implement feature X"
-#
-# Interactive shell:
-#   docker run --rm -it --entrypoint bash agentic-control
-#
-# =============================================================================
