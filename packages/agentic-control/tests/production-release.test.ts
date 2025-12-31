@@ -774,14 +774,14 @@ describe('Property 13: API documentation completeness', () => {
    * For any public TypeScript module export, the generated documentation should
    * include an API reference entry with type signatures.
    */
-    it('should have complete API documentation for all exports', async () => {
-      const distPath = join(PACKAGE_ROOT, 'dist');
-      // Ensure dist exists
-      if (!existsSync(distPath)) {
-        execSync('pnpm run build', { cwd: PACKAGE_ROOT });
-      }
+  it('should have complete API documentation for all exports', async () => {
+    const distPath = join(PACKAGE_ROOT, 'dist');
+    // Ensure dist exists
+    if (!existsSync(distPath)) {
+      execSync('pnpm run build', { cwd: PACKAGE_ROOT });
+    }
 
-      // Check that main exports are documented
+    // Check that main exports are documented
     const mainExports = await import('../src/index.js');
     const exportNames = Object.keys(mainExports);
 
