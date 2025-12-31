@@ -32,7 +32,7 @@ jobs:
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
         run: |
-          vendor-connectors call cursor create_agent \
+          python3 -m vendor_connectors call cursor create_agent \
             --repository "${{ github.repository }}" \
             --prompt "Review this PR: ${{ github.event.pull_request.html_url }}. Provide constructive feedback and identify potential bugs." \
             --ref "${{ github.event.pull_request.head.ref }}"
@@ -61,7 +61,7 @@ jobs:
           if [[ "$COMMENT" == *"/jules"* ]]; then
             PROMPT=$(echo "$COMMENT" | sed '1s|^[[:space:]]*/jules[[:space:]]*||')
             [ "$PROMPT" == "$COMMENT" ] && PROMPT="Fix issue"
-            vendor-connectors call jules create_session \
+            python3 -m vendor_connectors call jules create_session \
               --repo "$REPO" \
               --prompt "$PROMPT"
           fi
@@ -69,7 +69,7 @@ jobs:
           if [[ "$COMMENT" == *"/cursor"* ]]; then
             PROMPT=$(echo "$COMMENT" | sed '1s|^[[:space:]]*/cursor[[:space:]]*||')
             [ "$PROMPT" == "$COMMENT" ] && PROMPT="Fix issue"
-            vendor-connectors call cursor create_agent \
+            python3 -m vendor_connectors call cursor create_agent \
               --repository "$REPO" \
               --prompt "$PROMPT"
           fi
@@ -93,7 +93,7 @@ jobs:
           RUN_ID="${{ github.event.workflow_run.id }}"
           LOGS=$(gh run view "$RUN_ID" --log-failed 2>/dev/null | head -200 || echo "Failed to get logs")
           
-          vendor-connectors call cursor create_agent \
+          python3 -m vendor_connectors call cursor create_agent \
             --repository "$REPO" \
             --prompt "Fix CI failure on branch $BRANCH. Logs: $LOGS" \
             --ref "$BRANCH"
