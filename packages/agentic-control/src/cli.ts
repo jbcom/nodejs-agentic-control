@@ -966,7 +966,9 @@ rolesCmd
         console.log(`${role.icon} ${role.name} (${role.id})`);
         console.log(`   ${role.description}`);
         console.log(`   Triggers: ${triggers || 'manual only'}`);
-        console.log(`   Capabilities: ${role.capabilities.slice(0, 3).join(', ')}${role.capabilities.length > 3 ? '...' : ''}`);
+        console.log(
+          `   Capabilities: ${role.capabilities.slice(0, 3).join(', ')}${role.capabilities.length > 3 ? '...' : ''}`
+        );
         console.log();
       }
     }
@@ -1035,7 +1037,9 @@ rolesCmd
       const apiKey = getTriageApiKey();
 
       if (!apiKey) {
-        console.error('❌ No API key found. Set ANTHROPIC_API_KEY or configure in agentic.config.json');
+        console.error(
+          '❌ No API key found. Set ANTHROPIC_API_KEY or configure in agentic.config.json'
+        );
         process.exit(1);
       }
 
