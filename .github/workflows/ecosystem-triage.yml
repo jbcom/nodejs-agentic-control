@@ -1,0 +1,283 @@
+# Ecosystem Triage - Feedback Queue Management
+# Creates and maintains tracking issues as KV store for PR state
+#
+# Responsibilities:
+# - Create tracking issue for each PR (the "fixed point")
+# - Gather AI feedback from reviews/threads
+# - Resolve outdated threads
+# - Update tracking issue with synthesized state
+# - Manage state labels (blocked/review/ready)
+#
+# Coordination: Tracking issue is the shared state between workflows
+
+name: Ecosystem Triage
+
+on:
+  # PR lifecycle - data plane events
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, closed]
+  pull_request_review:
+    types: [submitted, dismissed]
+  # Manual trigger via comment
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: triage-${{ github.event.pull_request.number || github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  # ════════════════════════════════════════════════════════════════
+  # TRIAGE: Gather → Resolve → Store in Tracking Issue (KV Store)
+  # ════════════════════════════════════════════════════════════════
+  triage:
+    name: Triage
+    if: |
+      github.event_name == 'pull_request' ||
+      github.event_name == 'pull_request_review' ||
+      (github.event_name == 'issue_comment' && 
+       contains(github.event.comment.body, '@cascade synthesize'))
+    runs-on: ubuntu-latest
+    outputs:
+      tracking_issue: ${{ steps.triage.outputs.tracking_issue }}
+      verdict: ${{ steps.triage.outputs.verdict }}
+      pr_number: ${{ steps.triage.outputs.pr_number }}
+    steps:
+      - name: Triage PR Feedback
+        id: triage
+        env:
+          GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+        run: |
+          # ══════════════════════════════════════════════════════════
+          # RESOLVE PR CONTEXT
+          # ══════════════════════════════════════════════════════════
+          case "${{ github.event_name }}" in
+            issue_comment)
+              # Check if comment is on a PR
+              if [ -z "${{ github.event.issue.pull_request }}" ]; then
+                echo "Comment not on a PR, skipping"
+                exit 0
+              fi
+              PR_NUM="${{ github.event.issue.number }}"
+              ;;
+            *)
+              PR_NUM="${{ github.event.pull_request.number }}"
+              ;;
+          esac
+          
+          [ -z "$PR_NUM" ] && echo "No PR number" && exit 0
+          echo "pr_number=$PR_NUM" >> $GITHUB_OUTPUT
+          
+          # Handle PR closed event
+          if [ "${{ github.event.action }}" = "closed" ]; then
+            echo "🏁 PR #$PR_NUM closed - closing tracking issue..."
+            TRACKING=$(gh issue list --repo "${{ github.repository }}" --label "synthesis" --search "synthesis-pr-$PR_NUM in:title" --json number --jq '.[0].number // empty')
+            if [ -n "$TRACKING" ]; then
+              if [ "${{ github.event.pull_request.merged }}" = "true" ]; then
+                gh issue close $TRACKING --repo "${{ github.repository }}" --comment "✅ PR #$PR_NUM merged successfully." 2>/dev/null || true
+              else
+                gh issue close $TRACKING --repo "${{ github.repository }}" --comment "❌ PR #$PR_NUM closed without merge." 2>/dev/null || true
+              fi
+            fi
+            exit 0
+          fi
+          
+          # Get PR details
+          PR_DATA=$(gh pr view $PR_NUM --repo "${{ github.repository }}" --json title,url,author,headRefName,isDraft 2>/dev/null || echo "{}")
+          PR_TITLE=$(echo "$PR_DATA" | jq -r '.title // "Unknown"')
+          PR_URL=$(echo "$PR_DATA" | jq -r '.url // ""')
+          PR_AUTHOR=$(echo "$PR_DATA" | jq -r '.author.login // "unknown"')
+          PR_BRANCH=$(echo "$PR_DATA" | jq -r '.headRefName // "unknown"')
+          IS_DRAFT=$(echo "$PR_DATA" | jq -r '.isDraft // false')
+          
+          # Skip drafts
+          [ "$IS_DRAFT" = "true" ] && echo "Draft PR, skipping" && exit 0
+          
+          echo "╔════════════════════════════════════════════════════════════╗"
+          echo "║  📦 TRIAGE: PR #$PR_NUM                                    ║"
+          echo "╚════════════════════════════════════════════════════════════╝"
+          
+          OWNER="${{ github.repository_owner }}"
+          REPO="${{ github.event.repository.name }}"
+          AI_AGENTS="copilot|github-actions|coderabbitai|gemini|cursor|amazon-q|dependabot|bugbot|claude|sonarcloud|codacy|snyk"
+          
+          # ══════════════════════════════════════════════════════════
+          # STEP 1: GET OR CREATE TRACKING ISSUE (KV key lookup)
+          # ══════════════════════════════════════════════════════════
+          echo ""
+          echo "🔑 Step 1: KV Lookup..."
+          
+          ISSUE_KEY="synthesis-pr-$PR_NUM"
+          
+          # Ensure labels exist
+          for LABEL in "synthesis:7057FF" "queue-blocked:B60205" "queue-review:FBCA04" "queue-ready:0E8A16"; do
+            NAME="${LABEL%%:*}"
+            COLOR="${LABEL##*:}"
+            gh label create "$NAME" --color "$COLOR" --repo "${{ github.repository }}" 2>/dev/null || true
+          done
+          
+          # Search for existing tracking issue
+          TRACKING_ISSUE=$(gh issue list --repo "${{ github.repository }}" --label "synthesis" --search "$ISSUE_KEY in:title" --json number --jq '.[0].number // empty' 2>/dev/null)
+          
+          if [ -z "$TRACKING_ISSUE" ]; then
+            echo "  Creating new tracking issue..."
+            
+            TRACKING_ISSUE=$(gh issue create --repo "${{ github.repository }}" \
+              --title "$ISSUE_KEY: $PR_TITLE" \
+              --body "# 🔬 Synthesis: PR #$PR_NUM
+
+          > **PR:** $PR_URL
+          > **Author:** @$PR_AUTHOR
+          > **Branch:** \`$PR_BRANCH\`
+
+          ---
+
+          ## 📊 Queue State
+
+          | Metric | Value |
+          |--------|-------|
+          | Status | Initializing... |
+
+          ---
+          <sub>🤖 Managed by Ecosystem Triage</sub>" \
+              --label "synthesis" \
+              2>/dev/null | grep -oE '[0-9]+$')
+            
+            # Link tracking issue to PR
+            gh pr comment $PR_NUM --repo "${{ github.repository }}" --body "📦 **Tracking:** #$TRACKING_ISSUE" 2>/dev/null || true
+            echo "  ✅ Created #$TRACKING_ISSUE"
+          else
+            echo "  ✅ Found #$TRACKING_ISSUE"
+          fi
+          
+          echo "tracking_issue=$TRACKING_ISSUE" >> $GITHUB_OUTPUT
+          
+          # ══════════════════════════════════════════════════════════
+          # STEP 2: GATHER AI FEEDBACK
+          # ══════════════════════════════════════════════════════════
+          echo ""
+          echo "📥 Step 2: Gathering feedback..."
+          
+          QUERY='query($owner: String!, $repo: String!, $pr: Int!) {
+            repository(owner: $owner, name: $repo) {
+              pullRequest(number: $pr) {
+                reviews(first: 100) { nodes { author { login } body state } }
+                reviewThreads(first: 100) {
+                  nodes {
+                    id isResolved isOutdated path line
+                    comments(first: 3) { nodes { author { login } body } }
+                  }
+                }
+              }
+            }
+          }'
+          
+          RESULT=$(gh api graphql -f query="$QUERY" -f owner="$OWNER" -f repo="$REPO" -F pr="$PR_NUM" 2>/dev/null || echo "{}")
+          
+          # Count feedback
+          REVIEW_COUNT=$(echo "$RESULT" | jq --arg a "$AI_AGENTS" '[.data.repository.pullRequest.reviews.nodes[]? | select(.author.login | test($a; "i"))] | length' 2>/dev/null || echo "0")
+          THREAD_COUNT=$(echo "$RESULT" | jq --arg a "$AI_AGENTS" '[.data.repository.pullRequest.reviewThreads.nodes[]? | select(.isResolved == false) | select(.comments.nodes[0].author.login | test($a; "i"))] | length' 2>/dev/null || echo "0")
+          CRITICAL_COUNT=$(echo "$RESULT" | jq --arg a "$AI_AGENTS" '[.data.repository.pullRequest.reviewThreads.nodes[]? | select(.isResolved == false) | select(.comments.nodes[0].author.login | test($a; "i")) | select(.comments.nodes[0].body | test("security|vulnerability|critical|breaking"; "i"))] | length' 2>/dev/null || echo "0")
+          
+          echo "  Reviews: $REVIEW_COUNT | Threads: $THREAD_COUNT | Critical: $CRITICAL_COUNT"
+          
+          # ══════════════════════════════════════════════════════════
+          # STEP 3: RESOLVE OUTDATED THREADS
+          # ══════════════════════════════════════════════════════════
+          echo ""
+          echo "🧹 Step 3: Resolving outdated..."
+          
+          OUTDATED_IDS=$(echo "$RESULT" | jq -r --arg a "$AI_AGENTS" '
+            .data.repository.pullRequest.reviewThreads.nodes[]? |
+            select(.isOutdated == true and .isResolved == false) |
+            select(.comments.nodes[0].author.login | test($a; "i")) | .id
+          ' 2>/dev/null || echo "")
+          
+          RESOLVED=0
+          for TID in $OUTDATED_IDS; do
+            [ -z "$TID" ] && continue
+            gh api graphql -f query='mutation($id: ID!) { resolveReviewThread(input: {threadId: $id}) { thread { isResolved } } }' -f id="$TID" 2>/dev/null && RESOLVED=$((RESOLVED + 1))
+          done
+          echo "  ✅ Resolved: $RESOLVED"
+          
+          # ══════════════════════════════════════════════════════════
+          # STEP 4: DETERMINE VERDICT
+          # ══════════════════════════════════════════════════════════
+          echo ""
+          echo "⚖️ Step 4: Verdict..."
+          
+          if [ "$CRITICAL_COUNT" -gt 0 ]; then
+            VERDICT="BLOCKED"; VERDICT_EMOJI="🔴"; VERDICT_LABEL="queue-blocked"
+          elif [ "$THREAD_COUNT" -gt 0 ]; then
+            VERDICT="REVIEW"; VERDICT_EMOJI="🟡"; VERDICT_LABEL="queue-review"
+          else
+            VERDICT="READY"; VERDICT_EMOJI="✅"; VERDICT_LABEL="queue-ready"
+          fi
+          
+          echo "  $VERDICT_EMOJI $VERDICT"
+          echo "verdict=$VERDICT" >> $GITHUB_OUTPUT
+          
+          # ══════════════════════════════════════════════════════════
+          # STEP 5: BUILD FEEDBACK LIST
+          # ══════════════════════════════════════════════════════════
+          FEEDBACK=""
+          if [ "$THREAD_COUNT" -gt 0 ]; then
+            FEEDBACK=$(echo "$RESULT" | jq -r --arg a "$AI_AGENTS" '
+              [.data.repository.pullRequest.reviewThreads.nodes[]? |
+               select(.isResolved == false) |
+               select(.comments.nodes[0].author.login | test($a; "i"))] |
+              .[:10][] |
+              "- [ ] **\(.comments.nodes[0].author.login)** on `\(.path):\(.line // "?")`"
+            ' 2>/dev/null || echo "")
+          fi
+          [ -z "$FEEDBACK" ] && FEEDBACK="_No active feedback._"
+          
+          # ══════════════════════════════════════════════════════════
+          # STEP 6: UPDATE TRACKING ISSUE (KV write)
+          # ══════════════════════════════════════════════════════════
+          echo ""
+          echo "💾 Step 6: KV Write..."
+          
+          BODY="# 🔬 Synthesis: PR #$PR_NUM
+
+          > **PR:** $PR_URL
+          > **Author:** @$PR_AUTHOR
+          > **Branch:** \`$PR_BRANCH\`
+
+          ---
+
+          ## 📊 Queue State
+
+          | Metric | Value |
+          |--------|-------|
+          | Reviews | $REVIEW_COUNT |
+          | Active Threads | $THREAD_COUNT |
+          | Critical | $CRITICAL_COUNT |
+          | Resolved | $RESOLVED |
+          | Updated | $(date -u +%Y-%m-%dT%H:%M:%SZ) |
+
+          ## 🎯 Verdict: $VERDICT_EMOJI $VERDICT
+
+          ## 📝 Feedback Queue
+
+          $FEEDBACK
+
+          ---
+
+          **Commands:** \`@cascade address\` · \`@cascade synthesize\` · \`@cascade merge\`
+
+          <sub>🤖 Ecosystem Triage</sub>"
+          
+          gh issue edit $TRACKING_ISSUE --repo "${{ github.repository }}" --body "$BODY" 2>/dev/null || true
+          
+          # Update labels
+          gh issue edit $TRACKING_ISSUE --repo "${{ github.repository }}" --remove-label "queue-blocked,queue-review,queue-ready" 2>/dev/null || true
+          gh issue edit $TRACKING_ISSUE --repo "${{ github.repository }}" --add-label "$VERDICT_LABEL" 2>/dev/null || true
+          
+          echo ""
+          echo "✅ Tracking issue #$TRACKING_ISSUE updated: $VERDICT"

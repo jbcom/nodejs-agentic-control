@@ -1,0 +1,254 @@
+# Ecosystem Surveyor - Propagation + Context Injection
+# Syncs workflows and metaprompts to org control centers with context
+#
+# Flow:
+# 1. Read org-context.json for each child org
+# 2. Inject context into metaprompts
+# 3. Propagate to org control centers
+# 4. Org control centers then propagate to their repos
+
+name: Ecosystem Surveyor
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/metaprompts/**'
+      - '.github/org-context.json'
+      - '.github/workflows/ecosystem-*.yml'
+      - 'repository-files/**'
+  schedule:
+    # Weekly sync - Sundays at midnight
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+    inputs:
+      target_org:
+        description: 'Specific org to sync (leave empty for all)'
+        required: false
+        type: string
+      dry_run:
+        description: 'Dry run (no actual changes)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+env:
+  # Child org control center repos
+  CHILD_ORGS: |
+    agentic-dev-library/control-center
+    strata-game-library/control-center
+    extended-data-library/control-center
+
+jobs:
+  # ════════════════════════════════════════════════════════════════
+  # SURVEY: Discover and prepare context for each org
+  # ════════════════════════════════════════════════════════════════
+  survey:
+    name: Survey Organizations
+    runs-on: ubuntu-latest
+    outputs:
+      orgs: ${{ steps.discover.outputs.orgs }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Discover Managed Organizations
+        id: discover
+        env:
+          GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+        run: |
+          echo "🔍 Discovering managed organizations..."
+          echo ""
+          echo "jbcom is PURELY control + documentation (no codebases)"
+          echo "Syncing to org control centers that manage actual codebases..."
+          echo ""
+          
+          # Read managed orgs from enterprise org-registry
+          MANAGED_ORGS=$(jq -r '.managedOrganizations[] | .org' .github/org-registry.json 2>/dev/null || echo "")
+          
+          # Build matrix of orgs with accessible control centers
+          ORGS="[]"
+          for ORG in $MANAGED_ORGS; do
+            CONTROL_CENTER=$(jq -r --arg org "$ORG" '.managedOrganizations[] | select(.org == $org) | .controlCenter' .github/org-registry.json)
+            
+            if gh repo view "$CONTROL_CENTER" > /dev/null 2>&1; then
+              ORGS=$(echo "$ORGS" | jq --arg org "$ORG" '. + [$org]')
+              echo "  ✅ $CONTROL_CENTER"
+            else
+              echo "  ⚠️ $CONTROL_CENTER not found or not accessible"
+            fi
+          done
+          
+          # Filter if specific org requested
+          if [ -n "${{ inputs.target_org }}" ]; then
+            ORGS=$(echo "$ORGS" | jq --arg org "${{ inputs.target_org }}" '[.[] | select(. == $org)]')
+          fi
+          
+          echo "orgs=$ORGS" >> $GITHUB_OUTPUT
+          echo ""
+          echo "📋 Will sync to: $ORGS"
+
+  # ════════════════════════════════════════════════════════════════
+  # PROPAGATE: Sync to each org control center
+  # ════════════════════════════════════════════════════════════════
+  propagate:
+    name: Propagate to ${{ matrix.org }}
+    needs: survey
+    if: needs.survey.outputs.orgs != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        org: ${{ fromJson(needs.survey.outputs.orgs) }}
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: source
+
+      - name: Checkout Target
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ matrix.org }}/control-center
+          token: ${{ secrets.CI_GITHUB_TOKEN }}
+          path: target
+
+      - name: Load Org Context
+        id: context
+        run: |
+          # Get org-specific context from enterprise registry
+          ORG="${{ matrix.org }}"
+          
+          ORG_CTX=$(jq --arg org "$ORG" '.managedOrganizations[] | select(.org == $org)' source/.github/org-registry.json 2>/dev/null || echo "{}")
+          
+          # Extract values
+          DOMAIN=$(echo "$ORG_CTX" | jq -r '.domain // "unknown"')
+          FOCUS=$(echo "$ORG_CTX" | jq -r '.focus | join(", ") // ""')
+          
+          echo "org=$ORG" >> $GITHUB_OUTPUT
+          echo "domain=$DOMAIN" >> $GITHUB_OUTPUT
+          echo "focus=$FOCUS" >> $GITHUB_OUTPUT
+          
+          echo "📋 Context for $ORG:"
+          echo "   Domain: $DOMAIN"
+          echo "   Focus: $FOCUS"
+
+      - name: Inject Context into Metaprompts
+        run: |
+          ORG="${{ matrix.org }}"
+          DOMAIN="${{ steps.context.outputs.domain }}"
+          FOCUS="${{ steps.context.outputs.focus }}"
+          
+          mkdir -p target/.github/metaprompts
+          
+          # Process each metaprompt
+          for PROMPT in source/.github/metaprompts/*.md; do
+            FILENAME=$(basename "$PROMPT")
+            echo "  Processing $FILENAME..."
+            
+            # Inject org context
+            sed -e "s|{{ORG_NAME}}|$ORG|g" \
+                -e "s|{{DOMAIN}}|$DOMAIN|g" \
+                -e "s|{{FOCUS_AREAS}}|$FOCUS|g" \
+                "$PROMPT" > "target/.github/metaprompts/$FILENAME"
+          done
+          
+          echo "✅ Metaprompts injected with $ORG context"
+
+      - name: Sync Workflows
+        run: |
+          mkdir -p target/.github/workflows
+          
+          # Copy ecosystem workflows
+          for WF in ecosystem-triage.yml ecosystem-control.yml ecosystem-merge.yml ecosystem-agents.yml; do
+            if [ -f "source/.github/workflows/$WF" ]; then
+              cp "source/.github/workflows/$WF" "target/.github/workflows/"
+              echo "  ✅ $WF"
+            fi
+          done
+          
+          # Copy repository-files
+          if [ -d "source/repository-files/always-sync" ]; then
+            rsync -av --exclude='.git' source/repository-files/always-sync/ target/
+            echo "✅ Repository files synced"
+          fi
+
+      - name: Create Org Context File
+        run: |
+          ORG="${{ matrix.org }}"
+          DOMAIN="${{ steps.context.outputs.domain }}"
+          FOCUS="${{ steps.context.outputs.focus }}"
+          
+          cat > target/.github/org-context.json << EOF
+          {
+            "org": "$ORG",
+            "domain": "$DOMAIN",
+            "parentOrg": "jbcom",
+            "focus": $(echo "$FOCUS" | jq -R 'split(", ")'),
+            "syncedFrom": "jbcom/control-center",
+            "syncedAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          EOF
+          
+          echo "✅ Created org-context.json for $ORG"
+
+      - name: Commit and Push
+        if: ${{ !inputs.dry_run }}
+        working-directory: target
+        run: |
+          git config user.name "Ecosystem Surveyor"
+          git config user.email "surveyor@${{ steps.context.outputs.domain }}"
+          
+          git add -A
+          
+          if git diff --staged --quiet; then
+            echo "✅ No changes to sync"
+            exit 0
+          fi
+          
+          git commit -m "chore: sync from jbcom/control-center
+
+          Synced:
+          - Metaprompts with org context
+          - Ecosystem workflows
+          - Repository files
+          
+          Source: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
+          
+          git push
+          
+          echo "✅ Changes pushed to ${{ matrix.org }}/control-center"
+
+      - name: Dry Run Report
+        if: ${{ inputs.dry_run }}
+        working-directory: target
+        run: |
+          echo "🔍 DRY RUN - Would sync:"
+          git status --short
+
+  # ════════════════════════════════════════════════════════════════
+  # REPORT: Summary of propagation
+  # ════════════════════════════════════════════════════════════════
+  report:
+    name: Propagation Report
+    needs: [survey, propagate]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate Report
+        env:
+          GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+        run: |
+          echo "╔════════════════════════════════════════════════════════════╗"
+          echo "║  📊 ECOSYSTEM SURVEYOR REPORT                              ║"
+          echo "╚════════════════════════════════════════════════════════════╝"
+          echo ""
+          echo "Organizations synced: ${{ needs.survey.outputs.orgs }}"
+          echo "Dry run: ${{ inputs.dry_run || 'false' }}"
+          echo ""
+          echo "Files propagated:"
+          echo "  • .github/metaprompts/*.md (with context injection)"
+          echo "  • .github/workflows/ecosystem-*.yml"
+          echo "  • .github/org-context.json"
+          echo "  • repository-files/always-sync/**"
