@@ -1,167 +1,81 @@
-# CI - Build, Lint, Test
-# Core quality gates - runs on every PR and push to main
-name: CI
+name: CI (Python)
 
 on:
   push:
-    branches: [main]
+    branches: [main, master]
   pull_request:
-    types: [opened, synchronize, reopened]
+  workflow_dispatch:
 
-concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+env:
+  FORCE_COLOR: "1"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PIP_NO_PYTHON_VERSION_WARNING: "1"
 
 permissions:
   contents: read
+  pull-requests: write
+  id-token: write
 
 jobs:
-  build:
-    name: Build
+  lint:
+    name: Lint & Type Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: astral-sh/setup-uv@v5
         with:
-          node-version: '22'
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        shell: bash
+          version: "latest"
+          enable-cache: true
+      - name: Lint with Ruff
+        run: uvx ruff check .
+      - name: Format check with Ruff
+        run: uvx ruff format --check .
+      - name: Type check with Mypy
         run: |
-          STORE_PATH=$(pnpm store path --silent 2>/dev/null || true)
-          STORE_PATH="${STORE_PATH:-${XDG_DATA_HOME:-$HOME/.local/share}/pnpm/store}"
-          echo "store=$STORE_PATH" >> $GITHUB_OUTPUT
-
-      - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.0
-        with:
-          path: ${{ steps.pnpm-cache.outputs.store }}
-          key: pnpm-store-${{ hashFiles('pnpm-lock.yaml', 'package.json') }}
-          restore-keys: pnpm-store-
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Lint and Format Check
-        run: pnpm run check
-
-      - name: Build
-        run: pnpm run build
-
-      - name: Type check
-        run: pnpm run typecheck
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
-        with:
-          name: build-output
-          path: dist
-          retention-days: 1
+          uv sync --all-extras
+          uv run mypy .
 
   test:
-    name: Tests
-    needs: build
+    name: Test (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    needs: lint
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+      fail-fast: false
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: astral-sh/setup-uv@v5
         with:
-          node-version: '22'
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
       - name: Install dependencies
-        run: pnpm install
-
-      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        run: uv sync --all-extras
+      - name: Run tests
+        run: uv run pytest --cov --cov-report=xml
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
         with:
-          name: build-output
-          path: dist
-
-      - name: Run tests with coverage
-        run: pnpm run test:coverage
-
-      - name: Report Coveralls
-        uses: coverallsapp/github-action@v2
-
-      - name: Upload test results
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
-        if: always()
-        with:
-          name: test-results
-          path: coverage/
-          retention-days: 7
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   release:
     name: Release
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    needs: [build, test]
+    needs: test
     runs-on: ubuntu-latest
     permissions:
       contents: write
       id-token: write
     steps:
-      - uses: actions/checkout@v4 # v6.0.1
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: actions/setup-node@v4 # v6.1.0
-        with:
-          node-version: '22'
-          registry-url: 'https://registry.npmjs.org'
-
-      - uses: pnpm/action-setup@v4 # v4.1.0
-        with:
-          version: 9
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
-        with:
-          name: build-output
-          path: dist
-
-      - name: Git config
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Install python-semantic-release
-        run: pip install python-semantic-release
-
-      - name: Check if release needed
-        id: check
-        run: |
-          NEW_VERSION=$(semantic-release --noop version --print 2>/dev/null || true)
-          if [ -n "$NEW_VERSION" ]; then
-            echo "should_release=true" >> $GITHUB_OUTPUT
-            echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          else
-            echo "should_release=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Release version
-        if: steps.check.outputs.should_release == 'true'
+          token: ${{ secrets.CI_GITHUB_TOKEN }}
+      - uses: astral-sh/setup-uv@v5
+      - name: Python Semantic Release
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: semantic-release version
-
-      - name: Publish to NPM
-        if: steps.check.outputs.should_release == 'true'
-        run: pnpm publish --access public --no-git-checks
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Create GitHub Release
-        if: steps.check.outputs.should_release == 'true'
-        uses: softprops/action-gh-release@c85c599104002394fd3f3576406e9036952705e3 # v2.2.1
-        with:
-          tag_name: v${{ steps.check.outputs.version }}
-          name: v${{ steps.check.outputs.version }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+        run: |
+          uv tool install python-semantic-release
+          semantic-release version
+          semantic-release publish
