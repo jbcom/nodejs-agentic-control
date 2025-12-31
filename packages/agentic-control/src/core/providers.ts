@@ -14,6 +14,7 @@
  *   pnpm add ai-sdk-ollama  # for Ollama support
  */
 
+import type { LanguageModel } from 'ai';
 import { getDefaultApiKeyEnvVar, getTriageConfig } from './config.js';
 
 // ============================================
@@ -21,7 +22,7 @@ import { getDefaultApiKeyEnvVar, getTriageConfig } from './config.js';
 // ============================================
 
 export type ProviderFactory = (config: { apiKey: string }) => unknown;
-export type ModelFactory = (model: string) => unknown;
+export type ModelFactory = (model: string) => LanguageModel;
 
 export type SupportedProvider = 'anthropic' | 'openai' | 'google' | 'mistral' | 'azure' | 'ollama';
 
@@ -176,11 +177,11 @@ export async function loadProvider(providerName: string, apiKey: string): Promis
           // Enable reliable object generation with automatic JSON repair
           reliableObjectGeneration: OLLAMA_CONFIG.reliableObjectGeneration,
           objectGenerationOptions: OLLAMA_CONFIG.objectGenerationOptions,
-        });
+        }) as LanguageModel;
     }
 
     const provider = factory({ apiKey });
-    return (model: string) => (provider as ModelFactory)(model);
+    return (model: string) => (provider as (model: string) => LanguageModel)(model);
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code === 'ERR_MODULE_NOT_FOUND') {
       throw new Error(

@@ -1059,7 +1059,7 @@ rolesCmd
 
       console.log('🔮 Sage is thinking...\n');
 
-      const result = await executeSageRole(query, model as Parameters<typeof executeSageRole>[1], {
+      const result = await executeSageRole(query, model, {
         role,
       });
 
