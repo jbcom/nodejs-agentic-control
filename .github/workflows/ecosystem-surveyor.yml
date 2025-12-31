@@ -74,7 +74,7 @@ jobs:
             CONTROL_CENTER=$(jq -r --arg org "$ORG" '.managedOrganizations[] | select(.org == $org) | .controlCenter' .github/org-registry.json)
             
             if gh repo view "$CONTROL_CENTER" > /dev/null 2>&1; then
-              ORGS=$(echo "$ORGS" | jq --arg org "$ORG" '. + [$org]')
+              ORGS=$(echo "$ORGS" | jq -c --arg org "$ORG" '. + [$org]')
               echo "  ✅ $CONTROL_CENTER"
             else
               echo "  ⚠️ $CONTROL_CENTER not found or not accessible"
@@ -83,10 +83,11 @@ jobs:
           
           # Filter if specific org requested
           if [ -n "${{ inputs.target_org }}" ]; then
-            ORGS=$(echo "$ORGS" | jq --arg org "${{ inputs.target_org }}" '[.[] | select(. == $org)]')
+            ORGS=$(echo "$ORGS" | jq -c --arg org "${{ inputs.target_org }}" '[.[] | select(. == $org)]')
           fi
           
-          echo "orgs=$ORGS" >> $GITHUB_OUTPUT
+          # Output compact JSON (single line) for GITHUB_OUTPUT
+          echo "orgs=$(echo "$ORGS" | jq -c '.')" >> $GITHUB_OUTPUT
           echo ""
           echo "📋 Will sync to: $ORGS"
 
