@@ -18,12 +18,14 @@ author = "Jon Bogaty"
 # Try to get version from pyproject.toml or package.json
 try:
     import tomllib
+
     with open("../pyproject.toml", "rb") as f:
         data = tomllib.load(f)
         release = data.get("project", {}).get("version", "0.0.0")
 except Exception:
     try:
         import json
+
         with open("../package.json") as f:
             release = json.load(f).get("version", "0.0.0")
     except Exception:
@@ -110,5 +112,5 @@ myst_enable_extensions = [
 myst_heading_anchors = 3
 
 # TypeScript API documentation
-js_source_path = '../packages/agentic-control/src'
-jsdoc_config_path = '../jsdoc.json'
+js_source_path = "../packages/agentic-control/src"
+jsdoc_config_path = "../jsdoc.json"

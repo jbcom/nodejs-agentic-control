@@ -1,4 +1,4 @@
-name: CI (Python)
+name: CI
 
 on:
   push:
@@ -17,8 +17,8 @@ permissions:
   id-token: write
 
 jobs:
-  lint:
-    name: Lint & Type Check
+  python-lint:
+    name: Python Lint & Type Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -32,13 +32,35 @@ jobs:
         run: uvx ruff format --check .
       - name: Type check with Mypy
         run: |
-          uv sync --all-extras
-          uv run mypy .
+          if [ -f "pyproject.toml" ] || [ -f "requirements.txt" ]; then
+            uv sync --all-extras
+            uv run mypy .
+          else
+            echo "No Python package configuration found, skipping Mypy"
+          fi
 
-  test:
+  node-lint:
+    name: Node.js Lint & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - name: Install dependencies
+        run: pnpm install
+      - name: Biome Check
+        run: pnpm run check
+      - name: Type Check
+        run: pnpm run typecheck
+
+  python-test:
     name: Test (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
-    needs: lint
+    needs: python-lint
     strategy:
       matrix:
         python-version: ["3.11", "3.12", "3.13"]
@@ -49,10 +71,38 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
-      - name: Install dependencies
-        run: uv sync --all-extras
       - name: Run tests
-        run: uv run pytest --cov --cov-report=xml
+        run: |
+          if [ -f "pyproject.toml" ] || [ -f "requirements.txt" ]; then
+            uv sync --all-extras
+            uv run pytest --cov --cov-report=xml
+          else
+            echo "No Python package configuration found, skipping Tests"
+          fi
+      - name: Upload coverage
+        if: success() && hashFiles('coverage.xml') != ''
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  node-test:
+    name: Test (Node.js)
+    runs-on: ubuntu-latest
+    needs: node-lint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - name: Install dependencies
+        run: pnpm install
+      - name: Build
+        run: pnpm run build
+      - name: Run tests
+        run: pnpm run test:coverage
       - name: Upload coverage
         uses: codecov/codecov-action@v4
         with:
@@ -61,7 +111,7 @@ jobs:
   release:
     name: Release
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    needs: test
+    needs: [python-test, node-test]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -76,6 +126,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
         run: |
-          uv tool install python-semantic-release
-          semantic-release version
-          semantic-release publish
+          if [ -f "pyproject.toml" ]; then
+            uv tool install python-semantic-release
+            semantic-release version
+            semantic-release publish
+          else
+            echo "No pyproject.toml found, skipping Python release"
+          fi
