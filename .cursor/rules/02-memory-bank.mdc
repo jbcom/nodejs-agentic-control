@@ -1,0 +1,58 @@
+---
+description: Session memory and handoff protocol
+globs: "**/*"
+---
+
+# Memory Bank Protocol
+
+## Purpose
+
+Memory bank provides session continuity between agent runs. It's the "living memory" pattern.
+
+## Files
+
+| File | Purpose |
+|------|---------|
+| `memory-bank/activeContext.md` | Current state and focus |
+| `memory-bank/progress.md` | Session-by-session log |
+
+## Session Start
+
+```bash
+# Check context
+if [ -f memory-bank/activeContext.md ]; then
+  cat memory-bank/activeContext.md
+fi
+
+# Check for open issues
+gh issue list --label agent-session 2>/dev/null || true
+```
+
+## Session End
+
+```bash
+# Update context
+cat >> memory-bank/activeContext.md << 'EOF'
+
+## Session: $(date +%Y-%m-%d)
+
+### Completed
+- [x] Task 1
+
+### For Next Agent
+- [ ] Follow-up task
+EOF
+
+# Commit if changes
+git add memory-bank/
+git commit -m "docs: update memory bank for handoff" || true
+```
+
+## Handoff Notes
+
+When ending a session:
+
+1. **Summarize completed work** - What got done
+2. **List outstanding tasks** - What's left
+3. **Document blockers** - What stopped progress
+4. **Include references** - PRs, issues, file paths

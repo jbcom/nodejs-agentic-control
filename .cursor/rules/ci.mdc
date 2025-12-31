@@ -1,0 +1,97 @@
+---
+description: CI/CD workflow patterns
+globs: "**/*"
+---
+
+# CI/CD Workflow
+
+## Branch Protection
+
+- **main**: Protected, requires PR and CI pass
+- **Feature branches**: `feat/`, `fix/`, `docs/`, `chore/`
+
+## CI Checks
+
+Every PR must pass:
+
+1. **Build** - Package compiles/builds
+2. **Test** - All tests pass
+3. **Lint** - No linting errors
+4. **Type check** - No type errors
+
+## Watching CI
+
+```bash
+# List recent runs
+gh run list --limit 5
+
+# Watch a specific run
+gh run watch <run-id>
+
+# View run logs
+gh run view <run-id> --log
+```
+
+## Fixing CI Failures
+
+### Build Failures
+
+```bash
+# Python
+uv sync && uv run pytest
+
+# TypeScript
+pnpm install && pnpm run build
+
+# Go
+go mod download && go build ./...
+```
+
+### Lint Failures
+
+```bash
+# Python
+uvx ruff check --fix .
+uvx ruff format .
+
+# TypeScript
+pnpm run lint:fix
+
+# Go
+golangci-lint run --fix
+```
+
+### Test Failures
+
+1. Read the failure output carefully
+2. Reproduce locally
+3. Fix the code or the test
+4. Verify fix locally before pushing
+
+## Required Secrets
+
+These secrets power CI/CD:
+
+| Secret | Purpose |
+|--------|---------|
+| `CI_GITHUB_TOKEN` | GitHub API access |
+| `PYPI_TOKEN` | PyPI publishing |
+| `NPM_TOKEN` | npm publishing |
+| `DOCKERHUB_USERNAME` | Docker Hub login |
+| `DOCKERHUB_TOKEN` | Docker Hub publishing |
+
+## Troubleshooting
+
+### "Permission denied"
+
+Token lacks required scopes. Check:
+- `repo` scope for repository access
+- `workflow` scope for Actions
+- `write:packages` for package publishing
+
+### "Rate limit exceeded"
+
+Use authenticated requests (gh CLI auto-uses GITHUB_TOKEN):
+```bash
+gh api ...
+```

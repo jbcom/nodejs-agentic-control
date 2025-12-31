@@ -1,0 +1,132 @@
+---
+description: Documentation branding and styling standards for jbcom ecosystem
+globs: ["docs/**/*", "**/docs/**/*", "**/*.rst", "**/*.md"]
+---
+
+# Documentation Branding Standards
+
+## 🎨 jbcom Brand Requirements
+
+ALL documentation in jbcom repositories MUST follow the unified design system.
+
+### Reference Document
+
+See `docs/DESIGN-SYSTEM.md` for complete brand specifications.
+
+### Color Palette (Dark Theme)
+
+| Purpose | Hex |
+|---------|-----|
+| Background | `#0a0f1a` |
+| Surface/Cards | `#111827` |
+| Primary (Cyan) | `#06b6d4` |
+| Secondary (Blue) | `#3b82f6` |
+| Text Primary | `#f1f5f9` |
+| Text Secondary | `#94a3b8` |
+| Success | `#10b981` |
+| Warning | `#f59e0b` |
+| Error | `#ef4444` |
+
+### Typography
+
+| Element | Font | Weight |
+|---------|------|--------|
+| Headings | Space Grotesk | 600-700 |
+| Body | Inter | 400-500 |
+| Code | JetBrains Mono | 400 |
+
+## 📁 Language-Specific Scaffolds
+
+Use the appropriate scaffold from `repository-files/` for your language:
+
+| Language | Location | Tool | Files |
+|----------|----------|------|-------|
+| **Python** | `python/docs/` | Sphinx | `conf.py`, `jbcom-sphinx.css` |
+| **TypeScript** | `nodejs/docs/` | TypeDoc | `typedoc.json`, `jbcom-typedoc.css` |
+| **Rust** | `rust/docs/` | rustdoc | `README.md`, `jbcom-rustdoc.css` |
+| **Go** | `go/docs/` | godoc | `README.md` (conventions) |
+| **Terraform** | `terraform/docs/` | terraform-docs | `README.md`, config examples |
+
+## 📄 Python (Sphinx)
+
+Scaffold: `repository-files/python/docs/`
+
+```python
+# conf.py - key settings
+html_theme = "sphinx_rtd_theme"  # or "furo"
+html_static_path = ['_static']
+html_css_files = ['jbcom-sphinx.css']
+```
+
+## 📘 TypeScript/Node.js (TypeDoc)
+
+Scaffold: `repository-files/nodejs/docs/`
+
+```json
+// typedoc.json - key settings
+{
+  "customCss": "jbcom-typedoc.css",
+  "darkHighlightTheme": "github-dark"
+}
+```
+
+## 🦀 Rust (rustdoc)
+
+Scaffold: `repository-files/rust/docs/`
+
+```bash
+# Generate docs with jbcom branding
+RUSTDOCFLAGS="--extend-css docs/jbcom-rustdoc.css" cargo doc --no-deps
+```
+
+## 🐹 Go (doc2go)
+
+Scaffold: `repository-files/go/docs/`
+
+```bash
+# Install doc2go (godoc is deprecated)
+go install go.abhg.dev/doc2go@latest
+
+# Generate with jbcom branding
+doc2go -out docs/api ./...
+cp docs/jbcom-doc2go.css docs/api/custom.css
+```
+
+See `docs/README.md` for full workflow including GitHub Pages deployment.
+
+## 🏗️ Terraform (terraform-docs)
+
+Scaffold: `repository-files/terraform/docs/`
+
+Use `.terraform-docs.yml` for auto-generated module documentation.
+
+## ✅ Documentation Checklist
+
+Before pushing documentation changes:
+
+- [ ] Uses jbcom color palette (dark theme)
+- [ ] Headings use Space Grotesk font
+- [ ] Body text uses Inter font
+- [ ] Code blocks use JetBrains Mono
+- [ ] Links are cyan (`#06b6d4`)
+- [ ] Code blocks have proper contrast
+- [ ] Admonitions follow semantic colors
+- [ ] Focus states are visible (accessibility)
+- [ ] Meets WCAG AA contrast requirements
+
+## 🚫 Do NOT
+
+- ❌ Use light theme as default
+- ❌ Use different primary colors
+- ❌ Use non-standard fonts without approval
+- ❌ Create custom color schemes per-repo
+- ❌ Ignore accessibility requirements
+
+## ✅ Do
+
+- ✅ Use dark theme consistently
+- ✅ Use language-appropriate scaffold (Sphinx, TypeDoc, godoc, terraform-docs)
+- ✅ Apply the provided jbcom CSS for your doc tool
+- ✅ Follow the type scale specification
+- ✅ Ensure sufficient color contrast
+- ✅ Test with reduced motion preference
