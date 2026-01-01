@@ -45,7 +45,7 @@ jobs:
     outputs:
       orgs: ${{ steps.discover.outputs.orgs }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Discover Managed Organizations
         id: discover
@@ -97,12 +97,12 @@ jobs:
         org: ${{ fromJson(needs.survey.outputs.orgs) }}
       fail-fast: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           path: source
 
       - name: Checkout Target
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: ${{ matrix.org }}/control-center
           token: ${{ secrets.CI_GITHUB_TOKEN }}

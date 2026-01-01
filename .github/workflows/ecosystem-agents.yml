@@ -64,7 +64,7 @@ jobs:
       repo: ${{ steps.select.outputs.repo }}
       prompt: ${{ steps.select.outputs.prompt }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Select Agent
         id: select
@@ -169,7 +169,7 @@ jobs:
     if: needs.dispatch.outputs.agent != 'triage' && needs.dispatch.outputs.agent != 'assessment'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           token: ${{ secrets.CI_GITHUB_TOKEN }}
@@ -209,7 +209,7 @@ jobs:
     if: needs.dispatch.outputs.agent == 'triage'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Triage Issues and PRs
         env:
@@ -279,7 +279,7 @@ jobs:
     if: needs.dispatch.outputs.agent == 'assessment'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
