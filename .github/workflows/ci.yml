@@ -58,7 +58,7 @@ jobs:
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: build-output
-          path: dist
+          path: packages/**/dist
           retention-days: 1
 
   test:
@@ -80,7 +80,7 @@ jobs:
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: build-output
-          path: dist
+          path: packages
 
       - name: Run tests with coverage
         run: pnpm run test:coverage
@@ -125,7 +125,7 @@ jobs:
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: build-output
-          path: dist
+          path: packages
 
       - name: Git config
         run: |
