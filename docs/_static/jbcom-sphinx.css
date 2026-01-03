@@ -1,0 +1,566 @@
+/* =============================================================================
+   jbcom Design System - Sphinx Theme Customization
+   =============================================================================
+   
+   This CSS customizes Sphinx documentation themes (RTD, Furo, Book) to match
+   the jbcom brand identity. Include this file in your docs/_static/ directory
+   and reference it in conf.py.
+   
+   Usage in conf.py:
+   
+   html_static_path = ['_static']
+   html_css_files = ['jbcom-sphinx.css']
+   
+   ============================================================================= */
+
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+/* =============================================================================
+   CSS Custom Properties (Design Tokens)
+   ============================================================================= */
+
+:root {
+  /* Backgrounds */
+  --jb-bg-default: #0a0f1a;
+  --jb-bg-paper: #111827;
+  --jb-bg-elevated: #1e293b;
+  
+  /* Primary - Cyan */
+  --jb-primary: #06b6d4;
+  --jb-primary-light: #22d3ee;
+  --jb-primary-dark: #0891b2;
+  
+  /* Secondary - Blue */
+  --jb-secondary: #3b82f6;
+  --jb-secondary-light: #60a5fa;
+  --jb-secondary-dark: #2563eb;
+  
+  /* Text */
+  --jb-text-primary: #f1f5f9;
+  --jb-text-secondary: #94a3b8;
+  --jb-text-disabled: #475569;
+  
+  /* Borders */
+  --jb-border: #1e293b;
+  
+  /* Semantic */
+  --jb-success: #10b981;
+  --jb-warning: #f59e0b;
+  --jb-error: #ef4444;
+  --jb-info: #06b6d4;
+  
+  /* Typography */
+  --jb-font-heading: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --jb-font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --jb-font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  
+  /* Spacing */
+  --jb-space-xs: 4px;
+  --jb-space-sm: 8px;
+  --jb-space-md: 16px;
+  --jb-space-lg: 24px;
+  --jb-space-xl: 32px;
+  
+  /* Radius */
+  --jb-radius-sm: 4px;
+  --jb-radius-md: 8px;
+  --jb-radius-lg: 12px;
+}
+
+/* =============================================================================
+   Base Styles
+   ============================================================================= */
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--jb-font-body);
+  line-height: 1.6;
+}
+
+/* =============================================================================
+   Typography
+   ============================================================================= */
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--jb-font-heading);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+h5 {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+h6 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+code, pre, .highlight {
+  font-family: var(--jb-font-mono);
+  font-size: 0.875rem;
+}
+
+/* =============================================================================
+   ReadTheDocs Theme Overrides
+   ============================================================================= */
+
+/* Main content area */
+.wy-body-for-nav {
+  background: var(--jb-bg-default);
+}
+
+.wy-nav-content {
+  background: var(--jb-bg-default);
+  max-width: 900px;
+}
+
+.wy-nav-content-wrap {
+  background: var(--jb-bg-default);
+}
+
+/* Sidebar */
+.wy-side-nav-search {
+  background: linear-gradient(135deg, var(--jb-primary), var(--jb-secondary));
+}
+
+.wy-side-nav-search input[type="text"] {
+  background: var(--jb-bg-paper);
+  border: 1px solid var(--jb-border);
+  border-radius: var(--jb-radius-md);
+  color: var(--jb-text-primary);
+}
+
+.wy-side-nav-search input[type="text"]::placeholder {
+  color: var(--jb-text-disabled);
+}
+
+.wy-nav-side {
+  background: var(--jb-bg-paper);
+}
+
+.wy-menu-vertical {
+  font-family: var(--jb-font-body);
+}
+
+.wy-menu-vertical a {
+  color: var(--jb-text-secondary);
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.wy-menu-vertical a:hover {
+  color: var(--jb-text-primary);
+  background: var(--jb-bg-elevated);
+}
+
+.wy-menu-vertical li.current > a,
+.wy-menu-vertical li.current a:hover {
+  color: var(--jb-primary);
+  background: rgba(6, 182, 212, 0.1);
+  border-right: 3px solid var(--jb-primary);
+}
+
+.wy-menu-vertical li.toctree-l1.current > a {
+  border-left: none;
+  border-right: 3px solid var(--jb-primary);
+}
+
+/* Text colors */
+.wy-body-for-nav h1,
+.wy-body-for-nav h2,
+.wy-body-for-nav h3,
+.wy-body-for-nav h4,
+.wy-body-for-nav h5,
+.wy-body-for-nav h6 {
+  color: var(--jb-text-primary);
+}
+
+.wy-body-for-nav p,
+.wy-body-for-nav li,
+.wy-body-for-nav dd,
+.wy-body-for-nav dt {
+  color: var(--jb-text-secondary);
+}
+
+/* Links */
+.wy-body-for-nav a {
+  color: var(--jb-primary);
+  text-decoration: none;
+}
+
+.wy-body-for-nav a:hover {
+  color: var(--jb-primary-light);
+}
+
+/* Code blocks */
+.highlight {
+  background: var(--jb-bg-paper) !important;
+  border: 1px solid var(--jb-border);
+  border-radius: var(--jb-radius-md);
+}
+
+.highlight pre {
+  background: transparent;
+  color: var(--jb-text-primary);
+  padding: var(--jb-space-md);
+  margin: 0;
+}
+
+code.literal {
+  background: var(--jb-bg-paper);
+  color: var(--jb-primary);
+  padding: 2px 6px;
+  border-radius: var(--jb-radius-sm);
+  font-size: 0.875em;
+  border: 1px solid var(--jb-border);
+}
+
+/* Tables */
+table.docutils {
+  border-collapse: collapse;
+  width: 100%;
+  background: var(--jb-bg-paper);
+  border-radius: var(--jb-radius-md);
+  overflow: hidden;
+}
+
+table.docutils td,
+table.docutils th {
+  padding: var(--jb-space-sm) var(--jb-space-md);
+  border: 1px solid var(--jb-border);
+  color: var(--jb-text-secondary);
+}
+
+table.docutils th {
+  background: var(--jb-bg-elevated);
+  color: var(--jb-text-primary);
+  font-weight: 600;
+}
+
+table.docutils tr:hover td {
+  background: rgba(6, 182, 212, 0.05);
+}
+
+/* Admonitions */
+.admonition {
+  background: var(--jb-bg-paper);
+  border: 1px solid var(--jb-border);
+  border-radius: var(--jb-radius-md);
+  padding: var(--jb-space-md);
+}
+
+.admonition-title {
+  font-family: var(--jb-font-heading);
+  font-weight: 600;
+  margin-bottom: var(--jb-space-sm);
+}
+
+.admonition.note,
+.admonition.seealso {
+  border-left: 4px solid var(--jb-info);
+}
+
+.admonition.note .admonition-title,
+.admonition.seealso .admonition-title {
+  color: var(--jb-info);
+}
+
+.admonition.tip,
+.admonition.hint {
+  border-left: 4px solid var(--jb-success);
+}
+
+.admonition.tip .admonition-title,
+.admonition.hint .admonition-title {
+  color: var(--jb-success);
+}
+
+.admonition.warning,
+.admonition.caution,
+.admonition.attention {
+  border-left: 4px solid var(--jb-warning);
+}
+
+.admonition.warning .admonition-title,
+.admonition.caution .admonition-title,
+.admonition.attention .admonition-title {
+  color: var(--jb-warning);
+}
+
+.admonition.danger,
+.admonition.error {
+  border-left: 4px solid var(--jb-error);
+}
+
+.admonition.danger .admonition-title,
+.admonition.error .admonition-title {
+  color: var(--jb-error);
+}
+
+/* =============================================================================
+   Furo Theme Overrides
+   ============================================================================= */
+
+/* Furo dark mode variables */
+body[data-theme="dark"] {
+  --color-background-primary: var(--jb-bg-default);
+  --color-background-secondary: var(--jb-bg-paper);
+  --color-background-hover: var(--jb-bg-elevated);
+  --color-background-border: var(--jb-border);
+  
+  --color-foreground-primary: var(--jb-text-primary);
+  --color-foreground-secondary: var(--jb-text-secondary);
+  --color-foreground-muted: var(--jb-text-disabled);
+  
+  --color-brand-primary: var(--jb-primary);
+  --color-brand-content: var(--jb-primary);
+  
+  --color-link: var(--jb-primary);
+  --color-link-underline: transparent;
+  --color-link-hover: var(--jb-primary-light);
+  --color-link-underline-hover: var(--jb-primary-light);
+  
+  --color-sidebar-background: var(--jb-bg-paper);
+  --color-sidebar-background-border: var(--jb-border);
+  --color-sidebar-brand-text: var(--jb-text-primary);
+  --color-sidebar-link-text: var(--jb-text-secondary);
+  --color-sidebar-link-text-hover: var(--jb-text-primary);
+  
+  --color-code-background: var(--jb-bg-paper);
+  --color-code-foreground: var(--jb-text-primary);
+  --color-inline-code-background: var(--jb-bg-paper);
+}
+
+/* Force dark mode for jbcom brand consistency */
+html:not([data-theme]) {
+  --color-background-primary: var(--jb-bg-default);
+  --color-background-secondary: var(--jb-bg-paper);
+  --color-background-hover: var(--jb-bg-elevated);
+  --color-background-border: var(--jb-border);
+  
+  --color-foreground-primary: var(--jb-text-primary);
+  --color-foreground-secondary: var(--jb-text-secondary);
+  --color-foreground-muted: var(--jb-text-disabled);
+  
+  --color-brand-primary: var(--jb-primary);
+  --color-brand-content: var(--jb-primary);
+  
+  --color-link: var(--jb-primary);
+  --color-link-underline: transparent;
+  --color-link-hover: var(--jb-primary-light);
+  
+  --color-sidebar-background: var(--jb-bg-paper);
+  --color-sidebar-background-border: var(--jb-border);
+  
+  --color-code-background: var(--jb-bg-paper);
+}
+
+/* =============================================================================
+   Sphinx Book Theme Overrides
+   ============================================================================= */
+
+html[data-theme="dark"] .bd-sidebar-primary {
+  background: var(--jb-bg-paper);
+}
+
+html[data-theme="dark"] .bd-content {
+  background: var(--jb-bg-default);
+}
+
+html[data-theme="dark"] .navbar {
+  background: var(--jb-bg-paper);
+  border-bottom: 1px solid var(--jb-border);
+}
+
+/* =============================================================================
+   Accessibility
+   ============================================================================= */
+
+*:focus-visible {
+  outline: 2px solid var(--jb-primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* =============================================================================
+   Custom Scrollbar
+   ============================================================================= */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--jb-bg-paper);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--jb-text-disabled);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--jb-text-secondary);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--jb-text-disabled) var(--jb-bg-paper);
+}
+
+/* =============================================================================
+   Responsive Adjustments
+   ============================================================================= */
+
+@media (max-width: 900px) {
+  h1 {
+    font-size: 2rem;
+  }
+  
+  h2 {
+    font-size: 1.75rem;
+  }
+  
+  h3 {
+    font-size: 1.25rem;
+  }
+  
+  .wy-nav-content {
+    padding: var(--jb-space-md);
+  }
+}
+
+@media (max-width: 600px) {
+  h1 {
+    font-size: 1.75rem;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+  }
+}
+
+/* =============================================================================
+   API Documentation Styling
+   ============================================================================= */
+
+/* Class and function signatures */
+dl.py.class,
+dl.py.function,
+dl.py.method,
+dl.py.attribute {
+  background: var(--jb-bg-paper);
+  border: 1px solid var(--jb-border);
+  border-radius: var(--jb-radius-md);
+  padding: var(--jb-space-md);
+  margin-bottom: var(--jb-space-lg);
+}
+
+dl.py dt.sig {
+  font-family: var(--jb-font-mono);
+  color: var(--jb-text-primary);
+  background: var(--jb-bg-elevated);
+  padding: var(--jb-space-sm) var(--jb-space-md);
+  border-radius: var(--jb-radius-sm);
+}
+
+dl.py dd {
+  color: var(--jb-text-secondary);
+  padding: var(--jb-space-md) 0;
+}
+
+/* Parameter tables */
+.field-list {
+  background: var(--jb-bg-paper);
+  border-radius: var(--jb-radius-md);
+  padding: var(--jb-space-md);
+}
+
+.field-name {
+  color: var(--jb-primary);
+  font-weight: 600;
+}
+
+.field-body {
+  color: var(--jb-text-secondary);
+}
+
+/* =============================================================================
+   Copy Button Styling
+   ============================================================================= */
+
+button.copybtn {
+  background: var(--jb-bg-elevated);
+  border: 1px solid var(--jb-border);
+  border-radius: var(--jb-radius-sm);
+  color: var(--jb-text-secondary);
+}
+
+button.copybtn:hover {
+  background: var(--jb-primary);
+  color: white;
+  border-color: var(--jb-primary);
+}
+
+/* =============================================================================
+   Version Selector
+   ============================================================================= */
+
+.rst-versions {
+  background: var(--jb-bg-paper);
+  border-top: 1px solid var(--jb-border);
+}
+
+.rst-versions .rst-current-version {
+  background: var(--jb-bg-elevated);
+  color: var(--jb-text-primary);
+}
+
+.rst-versions .rst-other-versions {
+  background: var(--jb-bg-paper);
+}
+
+.rst-versions .rst-other-versions dd a {
+  color: var(--jb-text-secondary);
+}
+
+.rst-versions .rst-other-versions dd a:hover {
+  color: var(--jb-primary);
+}
