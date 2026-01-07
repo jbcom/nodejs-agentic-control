@@ -69,8 +69,8 @@ importers:
         specifier: 8.1.0
         version: 8.1.0(@types/node@22.19.3)
       '@modelcontextprotocol/sdk':
-        specifier: ^1.25.0
-        version: 1.25.1(hono@4.11.1)(zod@4.2.1)
+        specifier: ^1.25.2
+        version: 1.25.2(hono@4.11.1)(zod@4.2.1)
       '@octokit/rest':
         specifier: ^22.0.1
         version: 22.0.1
@@ -642,8 +642,8 @@ packages:
     resolution: {integrity: sha512-I6MMle0hXR8SC2KVaDHt+vQvGDSQQwhfA9eq17hAL1y1Sf+7aGpaCXzMx3S4wcD9fLS5LZxd7aY8nAiTYHjoEg==}
     engines: {node: '>=18.x'}
 
-  '@modelcontextprotocol/sdk@1.25.1':
-    resolution: {integrity: sha512-yO28oVFFC7EBoiKdAn+VqRm+plcfv4v0xp6osG/VsCB0NlPZWi87ajbCZZ8f/RvOFLEu7//rSRmuZZ7lMoe3gQ==}
+  '@modelcontextprotocol/sdk@1.25.2':
+    resolution: {integrity: sha512-LZFeo4F9M5qOhC/Uc1aQSrBHxMrvxett+9KLHt7OhcExtoiRN9DKgbZffMP/nxjutWDQpfMDfP3nkHI4X9ijww==}
     engines: {node: '>=18'}
     peerDependencies:
       '@cfworker/json-schema': ^4.1.1
@@ -773,8 +773,8 @@ packages:
     resolution: {integrity: sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==}
     engines: {node: '>=8.0.0'}
 
-  '@playwright/mcp@0.0.53':
-    resolution: {integrity: sha512-3nLsKMEAsQRV7FBoxvhEVOyKxVHt2E/S5Xe4zK5Z/nkqlqd/gFCtu79NlOTrODRNkjtMP8WKenOB31JigEBxoA==}
+  '@playwright/mcp@0.0.54':
+    resolution: {integrity: sha512-5hhRPZp/r/2j120W4fqC8se5/Y9Y40jf8e+Vp2VX69IoIbq06cN0LRK7cdcNrjdMHDyDSL8pTWf7QfWexvTsOQ==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -1133,8 +1133,8 @@ packages:
   before-after-hook@4.0.0:
     resolution: {integrity: sha512-q6tR3RPqIB1pMiTRMFcZwuG5T8vwp+vUvEG0vuI6B+Rikh5BfPp2fQ82c925FOs+b0lcFQ8CFrL+KbilfZFhOQ==}
 
-  body-parser@2.2.1:
-    resolution: {integrity: sha512-nfDwkulwiZYQIGwxdy0RUmowMhKcFVcYXUU7m4QlKYim1rUtg83xm2yjZ40QjDuc291AJjjeSc9b++AWHSgSHw==}
+  body-parser@2.2.2:
+    resolution: {integrity: sha512-oP5VkATKlNwcgvxi0vM0p/D3n2C3EReYVX+DNYs5TjZFn/oQt2j+4sVJtSMr18pdRr8wjTcBl6LoV+FUwzPmNA==}
     engines: {node: '>=18'}
 
   bottleneck@2.19.5:
@@ -2211,13 +2211,13 @@ packages:
     resolution: {integrity: sha512-C+VUP+8jis7EsQZIhDYmS5qlNtjv2yP4SNtjXK9AP1ZcTRlnSfuumaTnRfYZnYgUUYVIKqL0fRvmUGDV2fmp6g==}
     engines: {node: '>=4'}
 
-  playwright-core@1.58.0-alpha-1766189059000:
-    resolution: {integrity: sha512-TzOav4UONfbqB0U1I75RrcvOGdJ1icVam2/lje1Lok/D9lX9iJjBLGB4FqNgFqaIgeOqI1hpHY8nMfA82JqJtg==}
+  playwright-core@1.58.0-alpha-2025-12-29:
+    resolution: {integrity: sha512-nxeyVkzX5EXxOaQFTvS4N6fSzsod06A5CMLOBjsCMUGZkmJF6HO4OXkoSTw6ONsgAzIwqas5DdTDO6QXZbFm1A==}
     engines: {node: '>=18'}
     hasBin: true
 
-  playwright@1.58.0-alpha-1766189059000:
-    resolution: {integrity: sha512-h6yaIbcmyla/fh9jvvRBgVRMgwSmloKnCR4NDnVV18vqi1i5F4xqe3tGtgwHmkah9CJdQhhbZlTBIkY73q6+Xw==}
+  playwright@1.58.0-alpha-2025-12-29:
+    resolution: {integrity: sha512-syUV2eOFrAxG7LKAxI0KeLrwakifVD8Q/a+9uQZqEX7GxPhySHMnZ9wwq1YFco6tztDfWz9//vcCgN/e0wBb7A==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -2246,8 +2246,8 @@ packages:
   pure-rand@7.0.1:
     resolution: {integrity: sha512-oTUZM/NAZS8p7ANR3SHh30kXB+zK2r2BPcEn/awJIbOvq82WoMN4p62AWWp3Hhw50G0xMsw1mhIBLqHw64EcNQ==}
 
-  qs@6.14.0:
-    resolution: {integrity: sha512-YWWTjgABSKcvs/nWBi9PycY/JiPJqOD4JA6o9Sej2AtvSGarXxKC3OQSk4pAarbdQlKAh5D4FCQkJNkW+GAn3w==}
+  qs@6.14.1:
+    resolution: {integrity: sha512-4EK3+xJl8Ts67nLYNwqw/dsFVnCf+qR7RgXSK9jEEm9unao3njwMDdmsdvoKBKHzxd7tCYz5e5M+SnMjdtXGQQ==}
     engines: {node: '>=0.6'}
 
   range-parser@1.2.1:
@@ -2786,8 +2786,8 @@ packages:
     resolution: {integrity: sha512-CzhO+pFNo8ajLM2d2IW/R93ipy99LWjtwblvC1RsoSUMZgyLbYFr221TnSNT7GjGdYui6P459mw9JH/g/zW2ug==}
     engines: {node: '>=18'}
 
-  zod-to-json-schema@3.25.0:
-    resolution: {integrity: sha512-HvWtU2UG41LALjajJrML6uQejQhNJx+JBO9IflpSja4R03iNWfKXrj6W2h7ljuLyc1nKS+9yDyL/9tD1U/yBnQ==}
+  zod-to-json-schema@3.25.1:
+    resolution: {integrity: sha512-pM/SU9d3YAggzi6MtR4h7ruuQlqKtad8e9S0fmxcMi+ueAK5Korys/aWcV9LIIHTVbj01NdzxcnXSN+O74ZIVA==}
     peerDependencies:
       zod: ^3.25 || ^4
 
@@ -2817,8 +2817,8 @@ snapshots:
       '@actions/core': 2.0.1
       '@ai-sdk/mcp': 1.0.1(zod@4.2.1)
       '@linear/sdk': 68.1.0
-      '@modelcontextprotocol/sdk': 1.25.1(hono@4.11.1)(zod@4.2.1)
-      '@playwright/mcp': 0.0.53
+      '@modelcontextprotocol/sdk': 1.25.2(hono@4.11.1)(zod@4.2.1)
+      '@playwright/mcp': 0.0.54
       ai: 6.0.3(zod@4.2.1)
       ai-sdk-ollama: 3.0.0(ai@6.0.3(zod@4.2.1))(zod@4.2.1)
       commander: 14.0.2
@@ -2836,7 +2836,7 @@ snapshots:
     dependencies:
       '@actions/core': 2.0.1
       '@ai-sdk/mcp': 1.0.1(zod@4.2.1)
-      '@playwright/mcp': 0.0.53
+      '@playwright/mcp': 0.0.54
       ai: 6.0.3(zod@4.2.1)
       ai-sdk-ollama: 3.0.0(ai@6.0.3(zod@4.2.1))(zod@4.2.1)
       commander: 14.0.2
@@ -3215,7 +3215,7 @@ snapshots:
       '@graphql-typed-document-node/core': 3.2.0(graphql@15.10.1)
       graphql: 15.10.1
 
-  '@modelcontextprotocol/sdk@1.25.1(hono@4.11.1)(zod@4.2.1)':
+  '@modelcontextprotocol/sdk@1.25.2(hono@4.11.1)(zod@4.2.1)':
     dependencies:
       '@hono/node-server': 1.19.7(hono@4.11.1)
       ajv: 8.17.1
@@ -3232,7 +3232,7 @@ snapshots:
       pkce-challenge: 5.0.1
       raw-body: 3.0.2
       zod: 4.2.1
-      zod-to-json-schema: 3.25.0(zod@4.2.1)
+      zod-to-json-schema: 3.25.1(zod@4.2.1)
     transitivePeerDependencies:
       - hono
       - supports-color
@@ -3397,10 +3397,10 @@ snapshots:
 
   '@opentelemetry/api@1.9.0': {}
 
-  '@playwright/mcp@0.0.53':
+  '@playwright/mcp@0.0.54':
     dependencies:
-      playwright: 1.58.0-alpha-1766189059000
-      playwright-core: 1.58.0-alpha-1766189059000
+      playwright: 1.58.0-alpha-2025-12-29
+      playwright-core: 1.58.0-alpha-2025-12-29
 
   '@pnpm/config.env-replace@1.1.0': {}
 
@@ -3782,7 +3782,7 @@ snapshots:
 
   before-after-hook@4.0.0: {}
 
-  body-parser@2.2.1:
+  body-parser@2.2.2:
     dependencies:
       bytes: 3.1.2
       content-type: 1.0.5
@@ -3790,7 +3790,7 @@ snapshots:
       http-errors: 2.0.1
       iconv-lite: 0.7.1
       on-finished: 2.4.1
-      qs: 6.14.0
+      qs: 6.14.1
       raw-body: 3.0.2
       type-is: 2.0.1
     transitivePeerDependencies:
@@ -4111,7 +4111,7 @@ snapshots:
   express@5.2.1:
     dependencies:
       accepts: 2.0.0
-      body-parser: 2.2.1
+      body-parser: 2.2.2
       content-disposition: 1.0.1
       content-type: 1.0.5
       cookie: 0.7.2
@@ -4130,7 +4130,7 @@ snapshots:
       once: 1.4.0
       parseurl: 1.3.3
       proxy-addr: 2.0.7
-      qs: 6.14.0
+      qs: 6.14.1
       range-parser: 1.2.1
       router: 2.2.0
       send: 1.2.1
@@ -4764,11 +4764,11 @@ snapshots:
       find-up: 2.1.0
       load-json-file: 4.0.0
 
-  playwright-core@1.58.0-alpha-1766189059000: {}
+  playwright-core@1.58.0-alpha-2025-12-29: {}
 
-  playwright@1.58.0-alpha-1766189059000:
+  playwright@1.58.0-alpha-2025-12-29:
     dependencies:
-      playwright-core: 1.58.0-alpha-1766189059000
+      playwright-core: 1.58.0-alpha-2025-12-29
     optionalDependencies:
       fsevents: 2.3.2
 
@@ -4795,7 +4795,7 @@ snapshots:
 
   pure-rand@7.0.1: {}
 
-  qs@6.14.0:
+  qs@6.14.1:
     dependencies:
       side-channel: 1.1.0
 
@@ -5364,7 +5364,7 @@ snapshots:
 
   yoctocolors@2.1.2: {}
 
-  zod-to-json-schema@3.25.0(zod@4.2.1):
+  zod-to-json-schema@3.25.1(zod@4.2.1):
     dependencies:
       zod: 4.2.1
 
