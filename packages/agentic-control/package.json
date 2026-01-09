@@ -72,20 +72,20 @@
     "prepublishOnly": "npm run build && npm run test"
   },
   "dependencies": {
-    "@ai-sdk/mcp": "^1.0.1",
+    "@ai-sdk/mcp": "^1.0.5",
     "@inquirer/prompts": "8.1.0",
-    "@modelcontextprotocol/sdk": "^1.25.0",
+    "@modelcontextprotocol/sdk": "^1.25.2",
     "@octokit/rest": "^22.0.1",
     "@agentic-dev-library/triage": "^1.1.0",
-    "ai": "^6.0.3",
+    "ai": "^6.0.23",
     "commander": "^14.0.2",
     "cosmiconfig": "9.0.0",
     "env-var": "^7.5.0",
     "simple-git": "^3.30.0",
-    "zod": "^4.2.1"
+    "zod": "^4.3.5"
   },
   "peerDependencies": {
-    "@ai-sdk/anthropic": "^3.0.1",
+    "@ai-sdk/anthropic": "^3.0.9",
     "@ai-sdk/azure": "^2.0.78",
     "@ai-sdk/google": "^2.0.44",
     "@ai-sdk/mistral": "^2.0.25",
@@ -113,8 +113,8 @@
     }
   },
   "devDependencies": {
-    "@ai-sdk/anthropic": "^3.0.1",
-    "@types/node": "^22.15.0",
+    "@ai-sdk/anthropic": "^3.0.9",
+    "@types/node": "^25.0.3",
     "tsx": "4.21.0",
     "typescript": "^5.7.0",
     "vitest": "^4.0.14",
